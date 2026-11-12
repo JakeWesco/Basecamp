@@ -6,6 +6,7 @@ import { CheckCircle, WarningCircle, WhatsappLogo } from "@/components/ui/icons"
 import { BrandScope } from "@/lib/brand";
 import { UNIT_LABEL } from "@/lib/prices";
 import { lineTotal, quoteTotals } from "@/lib/quotes";
+import { allIn, BASIS_LABEL } from "@/lib/costs";
 import { getSharedQuote, type SharedLine } from "@/lib/shared-quote";
 import { CurrencySwitch, Money, MoneyProvider } from "@/components/quotes/money-view";
 import { ratesOn } from "@/lib/fx";
@@ -88,6 +89,12 @@ async function SharedQuotePage({ params }: { params: Promise<{ token: string }> 
   const money = (n: number) => <Money amount={n} />;
   const totals = quoteTotals(lines, quote.discount_percent);
   const lock = lockState(quote.locked_at);
+  const all = allIn(totals.total, data.costs, {
+    hunting_days: quote.hunting_days,
+    hunters: quote.hunters,
+    observers: quote.observers,
+    trophies: lines.filter((l) => l.kind === "trophy_fee").reduce((s, l) => s + l.quantity, 0),
+  });
   const rates = await ratesOn(quote.currency, rateDay(quote.locked_at));
   const url = `${await siteOrigin()}/q/${token}`;
   const ask = whatsAppChat(outfitter.phone, `Hi ${outfitter.name}, I have a question about my hunt quote: ${url}`);
@@ -179,6 +186,38 @@ async function SharedQuotePage({ params }: { params: Promise<{ token: string }> 
             {totals.atCost > 0 && " Items at cost are charged as used."}
           </p>
         </Card>
+
+        {all.lines.length > 0 && (
+          <Card title="Other costs to plan for">
+            <div className="flex flex-col gap-4">
+              <p className="text-muted">Estimates for costs you pay to others, not to {outfitter.name}, so you can see the whole trip.</p>
+              <ul className="flex flex-col divide-y divide-line">
+                {all.lines.map((c) => (
+                  <li key={c.name} className="flex items-start justify-between gap-4 py-4 first:pt-0 last:pb-0">
+                    <div className="flex min-w-0 flex-col gap-1">
+                      <span className="font-medium">{c.name}</span>
+                      <span className="tabular text-sm text-muted">
+                        {c.quantity === 1 ? "" : `${c.quantity} × `}
+                        <Money amount={c.low} /> to <Money amount={c.high} /> {BASIS_LABEL[c.basis]}
+                      </span>
+                      {c.note && <span className="text-sm text-muted">{c.note}</span>}
+                    </div>
+                    <span className="tabular text-right font-semibold whitespace-nowrap">
+                      <Money amount={c.lowTotal} /> to <Money amount={c.highTotal} />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-col gap-1 rounded-inner bg-sand-tint p-4">
+                <span className="text-sm font-medium text-olive-dark">Estimate for the whole trip</span>
+                <span className="tabular text-2xl font-semibold text-ink">
+                  <Money amount={all.low} /> to <Money amount={all.high} />
+                </span>
+                <span className="text-sm text-muted">The quote above plus these other costs.</span>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {quote.notes && (
           <Card title={`A note from ${outfitter.name}`}>

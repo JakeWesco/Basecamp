@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { validHex, validLogoUrl, type Brand } from "@/lib/brand-colors";
 import type { LinePrice } from "@/lib/quotes";
 import type { Unit } from "@/lib/prices";
+import type { CostEstimate } from "@/lib/costs";
 
 // A quote as a hunter sees it through a share link. Comes from
 // public.shared_quote(token), which leaves out everything private.
@@ -26,6 +27,7 @@ export type SharedQuote = {
   outfitter: { name: string; email: string | null; phone: string | null; website: string | null };
   brand: Brand;
   lines: SharedLine[];
+  costs: CostEstimate[];
 };
 
 const TOKEN = /^[0-9a-f]{64}$/;
@@ -40,6 +42,7 @@ export const getSharedQuote = cache(async (token: string): Promise<SharedQuote |
     quote: SharedQuote["quote"];
     outfitter: SharedQuote["outfitter"] & { logo_url: string | null; brand_primary: string | null; brand_accent: string | null };
     lines: Record<string, unknown>[];
+    costs?: Record<string, unknown>[];
   };
   return {
     quote: { ...d.quote, discount_percent: Number(d.quote.discount_percent) },
@@ -50,6 +53,13 @@ export const getSharedQuote = cache(async (token: string): Promise<SharedQuote |
       primary: validHex(d.outfitter.brand_primary),
       accent: validHex(d.outfitter.brand_accent),
     },
+    costs: (d.costs ?? []).map((c) => ({
+      name: String(c.name),
+      note: c.note == null ? null : String(c.note),
+      basis: c.basis as CostEstimate["basis"],
+      low: Number(c.low),
+      high: Number(c.high),
+    })),
     lines: d.lines.map((l) => ({
       kind: l.kind as SharedLine["kind"],
       description: String(l.description),
