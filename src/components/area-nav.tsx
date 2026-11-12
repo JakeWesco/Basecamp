@@ -15,8 +15,11 @@ const withIcons = (items: NavItem[]): Item[] => items.map((i) => ({ ...i, icon: 
 const ITEMS = { admin: withIcons(NAV.admin), agent: withIcons(NAV.agent) };
 const TOOLS = { admin: withIcons(TOOL_ITEMS.admin), agent: withIcons(TOOL_ITEMS.agent) };
 
+/** The area home matches only itself; sections also match their sub pages (a quote under Quotes). */
 function isCurrent(pathname: string, href: string) {
-  return pathname === href;
+  if (pathname === href) return true;
+  const isAreaHome = href.split("/").length === 2;
+  return !isAreaHome && pathname.startsWith(href + "/");
 }
 
 /** Desktop sidebar list. */

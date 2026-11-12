@@ -16,11 +16,13 @@ import {
 } from "@/components/ui";
 import { Tag, WarningCircle } from "@/components/ui/icons";
 import { feeLabel, formatMoney, rateLabel, UNIT_LABEL, UNITS, type Rate, type RatePriceType, type SpeciesFee } from "@/lib/prices";
+import { keepValues, type Kept } from "@/lib/form-values";
 import { deleteRate, deleteSpecies, saveRate, saveSpeciesFee, type FormState } from "./actions";
 
 type Props = { rates: Rate[]; fees: SpeciesFee[]; currency: string; season: string };
 
-const EMPTY: FormState = { ok: false, errors: {} };
+type State = FormState & { values?: Kept };
+const EMPTY: State = { ok: false, errors: {} };
 
 export function PriceList({ rates, fees, currency, season }: Props) {
   const [tab, setTab] = useState<"fees" | "rates">("fees");
@@ -218,11 +220,13 @@ function RateDialog({
   const [priceType, setPriceType] = useState<RatePriceType>(rate?.price_type ?? "fixed");
   const [confirming, setConfirming] = useState(false);
   const [removeError, setRemoveError] = useState<string>();
-  const [state, action, pending] = useActionState(async (prev: FormState, form: FormData) => {
+  const [state, action, pending] = useActionState(async (prev: State, form: FormData): Promise<State> => {
+    const values = keepValues(form);
     const result = await saveRate(prev, form);
     if (result.ok) onDone(result.message);
-    return result;
+    return result.ok ? result : { ...result, values };
   }, EMPTY);
+  const v = (name: string, saved: string) => state.values?.[name] ?? saved;
 
   return (
     <Dialog
@@ -231,13 +235,13 @@ function RateDialog({
       title={rate ? "Edit rate" : "Add a rate"}
       description="What the hunter pays per day, per trip or per item."
     >
-      <form action={action} className="flex flex-col gap-6">
+      <form action={action} noValidate className="flex flex-col gap-6">
         {rate && <input type="hidden" name="id" value={rate.id} />}
-        <Input label="Name" name="name" defaultValue={rate?.name} placeholder="Observer" error={state.errors.name} required />
+        <Input label="Name" name="name" defaultValue={v("name", rate?.name ?? "")} placeholder="Observer" error={state.errors.name} required />
         <Select
           label="Charged"
           name="unit"
-          defaultValue={rate?.unit ?? "per_day"}
+          defaultValue={v("unit", rate?.unit ?? "per_day")}
           options={UNITS.map((u) => ({ value: u, label: UNIT_LABEL[u] }))}
           error={state.errors.unit}
         />
@@ -258,7 +262,7 @@ function RateDialog({
             label={`Amount in ${currency}`}
             name="amount"
             numeric
-            defaultValue={rate?.amount != null ? String(rate.amount) : ""}
+            defaultValue={v("amount", rate?.amount != null ? String(rate.amount) : "")}
             placeholder="0"
             error={state.errors.amount}
             required
@@ -309,11 +313,13 @@ function FeeDialog({
   const [priceType, setPriceType] = useState<"fixed" | "on_request">(fee?.onRequest ? "on_request" : "fixed");
   const [confirming, setConfirming] = useState(false);
   const [removeError, setRemoveError] = useState<string>();
-  const [state, action, pending] = useActionState(async (prev: FormState, form: FormData) => {
+  const [state, action, pending] = useActionState(async (prev: State, form: FormData): Promise<State> => {
+    const values = keepValues(form);
     const result = await saveSpeciesFee(prev, form);
     if (result.ok) onDone(result.message);
-    return result;
+    return result.ok ? result : { ...result, values };
   }, EMPTY);
+  const v = (name: string, saved: string) => state.values?.[name] ?? saved;
 
   return (
     <Dialog
@@ -322,9 +328,9 @@ function FeeDialog({
       title={fee ? `Edit ${fee.name}` : "Add a species"}
       description="The trophy fee for this season. Hunters only see species that are shown."
     >
-      <form action={action} className="flex flex-col gap-6">
+      <form action={action} noValidate className="flex flex-col gap-6">
         {fee && <input type="hidden" name="speciesId" value={fee.speciesId} />}
-        <Input label="Species" name="name" defaultValue={fee?.name} placeholder="Kudu" error={state.errors.name} required />
+        <Input label="Species" name="name" defaultValue={v("name", fee?.name ?? "")} placeholder="Kudu" error={state.errors.name} required />
         <SegmentedControl
           label="Trophy fee"
           name="priceType"
@@ -341,7 +347,7 @@ function FeeDialog({
             label={`Amount in ${currency}`}
             name="amount"
             numeric
-            defaultValue={fee?.amount != null ? String(fee.amount) : ""}
+            defaultValue={v("amount", fee?.amount != null ? String(fee.amount) : "")}
             placeholder="0"
             error={state.errors.amount}
             required

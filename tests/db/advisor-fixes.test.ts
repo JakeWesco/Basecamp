@@ -35,7 +35,7 @@ describe("functions exposed through the API", () => {
     ).rejects.toThrow(/permission denied/);
   });
 
-  it("the policy helpers live outside the API schema and anon cannot run them", async () => {
+  it("the private functions live outside the API schema and anon cannot run them", async () => {
     const rows = (
       await db.query<{ name: string; anon: boolean; authd: boolean }>(
         `select p.proname as name,
@@ -44,9 +44,13 @@ describe("functions exposed through the API", () => {
          from pg_proc p where p.pronamespace = 'private'::regnamespace order by 1`,
       )
     ).rows;
+    // Policy helpers: signed-in users run them inside policies. Trigger
+    // functions (quote rules): nobody calls them directly.
     expect(rows).toEqual([
       { name: "has_role", anon: false, authd: true },
       { name: "is_member", anon: false, authd: true },
+      { name: "quote_line_rules", anon: false, authd: false },
+      { name: "quote_rules", anon: false, authd: false },
     ]);
   });
 
