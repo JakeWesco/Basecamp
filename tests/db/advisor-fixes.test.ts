@@ -13,7 +13,10 @@ beforeAll(async () => {
 });
 
 describe("functions exposed through the API", () => {
-  it("no SECURITY DEFINER function in public is callable by anon or authenticated", async () => {
+  it("the only SECURITY DEFINER function in public anyone can call is the share link lookup", async () => {
+    // shared_quote is public on purpose: hunters open a quote link without
+    // logging in. tests/db/share-links.test.ts checks it needs the exact
+    // token and shows nothing private. Any other function here is a hole.
     const rows = (
       await db.query<{ name: string }>(
         `select p.proname as name from pg_proc p
@@ -22,7 +25,7 @@ describe("functions exposed through the API", () => {
                 or has_function_privilege('authenticated', p.oid, 'execute'))`,
       )
     ).rows;
-    expect(rows.map((r) => r.name)).toEqual([]);
+    expect(rows.map((r) => r.name)).toEqual(["shared_quote"]);
   });
 
   it("a signed-out request cannot call bootstrap_admin", async () => {

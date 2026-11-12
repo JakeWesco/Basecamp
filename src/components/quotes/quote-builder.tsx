@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition, type ReactNode } from "react";
-import { Badge, Button, Card, Checkbox, Dialog, Input, SectionHeading, Select, cx, useToast } from "@/components/ui";
+import { Badge, Button, buttonClasses, Card, Checkbox, Dialog, Input, SectionHeading, Select, ShareToWhatsApp, cx, useToast } from "@/components/ui";
 import { WarningCircle, X } from "@/components/ui/icons";
 import { formatMoney, UNIT_LABEL } from "@/lib/prices";
-import { addLine, deleteQuote, removeLine, setDiscount, setStatus, updateLine, type ActionResult } from "@/lib/quote-actions";
+import { addLine, deleteQuote, removeLine, setDiscount, setShareLink, setStatus, updateLine, type ActionResult } from "@/lib/quote-actions";
 import { defaultQuantity, lineTotal, quoteTotals, type QuoteLine } from "@/lib/quotes";
 import type { QuoteContext } from "@/lib/quote-data";
 import { QuoteDetailsForm } from "./quote-details-form";
@@ -79,9 +79,9 @@ export function QuoteBuilder(ctx: QuoteContext) {
                 }))}
                 quantityFor={(id) => {
                   const r = ctx.rates.find((x) => x.id === id);
-                  return r ? defaultQuantity(r.unit, quote) : 1;
+                  return r ? defaultQuantity(r.unit, quote, r.name) : 1;
                 }}
-                hint={`Per day rates start at days times hunters (${quote.hunting_days * quote.hunters}). Change it to fit.`}
+                hint="Per day rates start at days times hunters, or times observers for an observer rate. Change it to fit."
                 busy={busy}
                 onAdd={(id, quantity) => run(() => addLine(area, quote.id, { kind: "rate", rateId: id, quantity }))}
               />
@@ -147,10 +147,19 @@ export function QuoteBuilder(ctx: QuoteContext) {
             </dl>
           </Card>
 
+          <ShareCard
+            url={ctx.shareUrl}
+            message={`Hello ${quote.hunter_name}, here is your hunt quote from ${ctx.outfitterName}.`}
+            busy={busy}
+            onCreate={() => run(() => setShareLink(area, quote.id, true))}
+            onTurnOff={() => run(() => setShareLink(area, quote.id, false))}
+            onCopied={() => toast({ title: "Link copied" })}
+          />
+
           <Card>
             <div className="flex flex-col gap-3">
               {quote.status === "draft" ? (
-                <Button variant="cta" loading={busy} loadingLabel="Saving…" onClick={() => run(() => setStatus(area, quote.id, "sent"))}>
+                <Button variant="secondary" loading={busy} loadingLabel="Saving…" onClick={() => run(() => setStatus(area, quote.id, "sent"))}>
                   Mark as sent
                 </Button>
               ) : (
@@ -158,7 +167,7 @@ export function QuoteBuilder(ctx: QuoteContext) {
                   Back to draft
                 </Button>
               )}
-              <p className="text-sm text-muted">The share link and brochure come next. For now, mark it as sent once the hunter has it.</p>
+              <p className="text-sm text-muted">Mark it as sent once the hunter has it, so your quote list stays up to date.</p>
               <DeleteQuote onDelete={() => run(() => deleteQuote(area, quote.id))} busy={busy} />
             </div>
           </Card>
@@ -408,6 +417,80 @@ function AddPicker({
       </div>
       {hint && <p className="text-sm text-muted">{hint}</p>}
     </div>
+  );
+}
+
+/** The private link a hunter opens on any phone, with no login. */
+function ShareCard({
+  url,
+  message,
+  busy,
+  onCreate,
+  onTurnOff,
+  onCopied,
+}: {
+  url: string | null;
+  message: string;
+  busy: boolean;
+  onCreate: () => void;
+  onTurnOff: () => void;
+  onCopied: () => void;
+}) {
+  const [confirmOff, setConfirmOff] = useState(false);
+  if (!url)
+    return (
+      <Card title="Share with the hunter">
+        <div className="flex flex-col gap-4">
+          <p className="text-muted">Make a private link the hunter can open on any phone. No login needed, in your colours.</p>
+          <Button variant="cta" loading={busy} loadingLabel="Making the link…" onClick={onCreate}>
+            Create share link
+          </Button>
+        </div>
+      </Card>
+    );
+  return (
+    <Card title="Share with the hunter">
+      <div className="flex flex-col gap-4">
+        <Input label="Private link" value={url} readOnly onFocus={(e) => e.currentTarget.select()} hint="Anyone with this link can see the quote." />
+        <ShareToWhatsApp message={message} url={url} variant="cta" />
+        <div className="flex flex-wrap gap-3">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(url);
+                onCopied();
+              } catch {
+                // Clipboard blocked: the field is selectable, so the link can be copied by hand.
+              }
+            }}
+          >
+            Copy link
+          </Button>
+          <a href={url} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "secondary", size: "sm" })}>
+            Open
+          </a>
+        </div>
+        {confirmOff ? (
+          <div className="flex flex-col gap-3 rounded-inner border border-error bg-error-tint p-4">
+            <p className="text-sm font-medium text-error">Turn off this link? Anyone who has it will see a message that it no longer works.</p>
+            <div className="flex flex-wrap gap-3">
+              <Button variant="danger" size="sm" loading={busy} loadingLabel="Turning off…" onClick={onTurnOff}>
+                Turn it off
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setConfirmOff(false)} disabled={busy}>
+                Keep it on
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button variant="ghost" size="sm" className="self-start text-error!" onClick={() => setConfirmOff(true)}>
+            Turn off link
+          </Button>
+        )}
+      </div>
+    </Card>
   );
 }
 

@@ -2,6 +2,7 @@ import "server-only";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { siteOrigin } from "@/lib/site";
 import type { Rate, SpeciesFee } from "@/lib/prices";
 import { quoteTotals, type Quote, type QuoteLine } from "@/lib/quotes";
 
@@ -72,6 +73,9 @@ export type QuoteContext = {
   rates: (Rate & { agent_can_give_free: boolean })[];
   fees: SpeciesFee[];
   maxDiscount: number;
+  /** The hunter link, when one is on. */
+  shareUrl: string | null;
+  outfitterName: string;
 };
 
 /** One quote with its lines and the price list it is built from. */
@@ -94,7 +98,7 @@ export async function loadQuote(area: Area, id: string): Promise<QuoteContext> {
       .order("name"),
     supabase.from("species").select("id, name, is_published").eq("outfitter_id", me.outfitterId).order("sort_order").order("name"),
     supabase.from("trophy_fees").select("id, species_id, amount, on_request").eq("outfitter_id", me.outfitterId).eq("season", quote.season),
-    supabase.from("outfitters").select("agent_max_discount_percent").eq("id", me.outfitterId).single(),
+    supabase.from("outfitters").select("agent_max_discount_percent, name").eq("id", me.outfitterId).single(),
   ]);
 
   const feeBySpecies = new Map((fees ?? []).map((f) => [f.species_id as string, f]));
@@ -119,5 +123,7 @@ export async function loadQuote(area: Area, id: string): Promise<QuoteContext> {
         };
       }),
     maxDiscount: Number(outfitter?.agent_max_discount_percent ?? 0),
+    shareUrl: quote.share_token ? `${await siteOrigin()}/q/${quote.share_token}` : null,
+    outfitterName: (outfitter?.name as string) ?? "",
   };
 }

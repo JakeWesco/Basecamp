@@ -24,6 +24,8 @@ describe("quote maths", () => {
   it("charges per day rates for every hunter, every day", () => {
     expect(defaultQuantity("per_day", { hunting_days: 7, hunters: 2 })).toBe(14);
     expect(defaultQuantity("per_trip", { hunting_days: 7, hunters: 2 })).toBe(1);
+    expect(defaultQuantity("per_day", { hunting_days: 7, hunters: 2, observers: 1 }, "Observer")).toBe(7);
+    expect(defaultQuantity("per_day", { hunting_days: 7, hunters: 2, observers: 0 }, "Observer")).toBe(7);
   });
 });
 
