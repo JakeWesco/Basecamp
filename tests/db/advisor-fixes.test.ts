@@ -48,10 +48,12 @@ describe("functions exposed through the API", () => {
       )
     ).rows;
     // Policy helpers: signed-in users run them inside policies. Trigger
-    // functions (quote rules): nobody calls them directly.
+    // functions (quote and lead rules): nobody calls them directly.
     expect(rows).toEqual([
       { name: "has_role", anon: false, authd: true },
       { name: "is_member", anon: false, authd: true },
+      { name: "lead_rules", anon: false, authd: false },
+      { name: "quote_lead_rules", anon: false, authd: false },
       { name: "quote_line_rules", anon: false, authd: false },
       { name: "quote_rules", anon: false, authd: false },
     ]);

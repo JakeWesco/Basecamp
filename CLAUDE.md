@@ -48,7 +48,7 @@ Every feature follows these. Enforce them in RLS and in the server code, not onl
 - **Admins:** everything.
 - **Agents:**
   - Never change prices, the price list or settings, and never see Prices or Settings in the navigation (`tests/ui/nav.test.ts`).
-  - Capture leads (at least name, email and phone number) and see only their own leads.
+  - Capture leads (a name, plus an email or a phone number in international format) and see only their own leads (`tests/db/leads.test.ts`).
   - Build quotes from the outfitter's fixed price list. They can add a discount or a freebie only within the limits the outfitter sets in Settings (for example a maximum discount percentage, and a list of extras they may give free). Anything beyond those limits is blocked, with a clear message that says what the limit is.
   - Every discount or freebie an agent gives is recorded on the quote with who gave it, so the outfitter can see it.
 - **Clients:** only their own records.

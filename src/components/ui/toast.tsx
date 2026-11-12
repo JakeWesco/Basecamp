@@ -36,8 +36,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={show}>
       {children}
-      {/* Above the phone tab bar, bottom centre on wider screens. */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-20 z-50 flex flex-col items-center gap-2 px-4 lg:bottom-6">
+      {/* Phones: at the top under the header, clear of the tab bar and the buttons at the bottom of forms. Wider screens: bottom centre. */}
+      <div className="pointer-events-none fixed inset-x-0 top-20 z-50 flex flex-col items-center gap-2 px-4 lg:top-auto lg:bottom-6">
         {items.map((t) => (
           <ToastCard key={t.id} item={t} onDismiss={() => dismiss(t.id)} />
         ))}
@@ -64,7 +64,7 @@ function ToastCard({ item, onDismiss }: { item: Item; onDismiss: () => void }) {
         "pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-card border bg-card p-4 text-ink shadow-lg",
         error ? "border-error" : "border-line",
         motion,
-        visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
+        visible ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0 lg:translate-y-4",
       )}
     >
       <span
