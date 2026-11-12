@@ -8,6 +8,7 @@
    - `supabase/migrations/20261112130000_advisor_fixes.sql`
    - `supabase/migrations/20261112160000_price_list.sql`
    - `supabase/migrations/20261112170000_price_list_fk_index.sql`
+   - `supabase/migrations/20261112180000_quotes.sql`
    - `supabase/seed.sql` (creates Wesco Safaris as outfitter #1)
    - `supabase/data/wesco-2026-2027-prices.sql` (Wesco's 2026/2027 price list; safe to run again)
 

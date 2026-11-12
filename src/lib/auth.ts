@@ -59,3 +59,15 @@ export async function requireRole(role: Role): Promise<Membership & { email: str
   if (!match) redirect(memberships[0] ? HOME[memberships[0].role] : "/no-access");
   return { ...match, email: email ?? "" };
 }
+
+/**
+ * For actions shared by admins and agents (quotes). Returns the highest staff
+ * role. The database still decides what each role may do.
+ */
+export async function requireStaff(): Promise<Membership & { email: string; userId: string }> {
+  const { userId, email, memberships } = await getMemberships();
+  if (!userId) redirect("/login");
+  const match = memberships.find((m) => m.role === "admin" || m.role === "agent");
+  if (!match) redirect(memberships[0] ? HOME[memberships[0].role] : "/no-access");
+  return { ...match, email: email ?? "", userId };
+}

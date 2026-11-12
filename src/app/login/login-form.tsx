@@ -9,9 +9,9 @@ export function LoginForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState<LoginState, FormData>(signIn, { error: null });
 
   return (
-    <form action={action} className="flex flex-col gap-6">
+    <form action={action} noValidate className="flex flex-col gap-6">
       <input type="hidden" name="next" value={next} />
-      <Input label="Email" name="email" type="email" autoComplete="email" required />
+      <Input label="Email" name="email" type="email" autoComplete="email" defaultValue={state.email ?? ""} required />
       <Input label="Password" name="password" type="password" autoComplete="current-password" required />
       {state.error && (
         <p role="alert" className="flex items-start gap-2 rounded-field bg-error-tint px-4 py-3 text-sm font-medium text-error">

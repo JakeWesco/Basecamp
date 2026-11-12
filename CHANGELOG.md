@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-12 · Phase 1: quote builder (branch quotes)
+- New tables `quotes` and `quote_lines`, plus agent limits: `outfitters.agent_max_discount_percent` and `rates.agent_can_give_free`. Applied to the live database; advisors report nothing new.
+- Rules in the database (triggers and RLS), per CLAUDE.md Roles: admins see every quote, agents only their own, clients none. Rate and trophy fee prices always come from the price list for the quote's season; agents can change quantities, never prices; only admins can add a line that isn't on the price list. Agents are blocked above the discount limit ("The highest discount you can give is 10%. Ask an admin for more.") and from making anything free that isn't allowed. Every discount and freebie records who gave it, and that can't be faked.
+- `/admin/settings`: highest agent discount and which extras agents may give free (starts at 0% and nothing).
+- `/admin/quotes` and `/agent/quotes`: list, new quote, and the builder (daily rates and extras, trophy fees, quantities, free extras, discount, total, on request items noted, mark as sent, delete). Quotes and Settings are live in the menus; agents still never see Prices or Settings.
+- Forms now keep what was typed when there is an error (quote, price, settings and sign in forms), and show Basecamp's own messages instead of the browser's.
+- Tests: 15 for quotes in the database (who sees what, prices from the list, limits, who gave it), quote maths and form checks. Checked that removing the limits fails the tests. 146 tests pass.
+- Checked end to end as an admin: a test quote (2 hunters, 7 days, free observer, kudu, lion on request, 10% off) totalled $7,020 as expected; it was deleted afterwards.
+- Next: the share link and brochure, so a quote can go to the hunter on WhatsApp. Showing team members' names (instead of "a team member") comes with the Team page.
+
 ## 2026-11-12 · Phase 1: price list (branch price-list)
 - New tables `species`, `trophy_fees` (one per species per season, or price on request) and `rates` (daily rates and extras: fixed, at cost or on request). Prices are tagged with the season, so quotes can lock to it later. Every member reads them; only admins change them (RLS and server checks). A fee can't point at another outfitter's species.
 - Wesco's 2026/2027 price list from the PDF loaded: 46 species (5 on request) and 6 daily rates. Data file `supabase/data/wesco-2026-2027-prices.sql`, safe to run again. Applied to the live database.
