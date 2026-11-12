@@ -16,7 +16,7 @@ export default function Home() {
           </Link>
         </div>
       </section>
-      <footer className="bg-olive-dark px-4 py-8 text-on-olive sm:px-6">
+      <footer className="border-t border-line bg-sand-tint px-4 py-8 text-ink sm:px-6">
         <p className="mx-auto max-w-3xl text-sm">Quotes, brochures and trophy updates your hunters can open on any phone.</p>
       </footer>
     </main>

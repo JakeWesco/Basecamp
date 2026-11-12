@@ -52,7 +52,7 @@ export function Dialog({ open, onClose, title, description, children, footer }: 
         // 640px and up: centred card.
         "sm:inset-0 sm:m-auto sm:h-fit sm:max-w-lg sm:rounded-card sm:border-b",
         "sm:translate-y-4 sm:opacity-0 sm:open:translate-y-0 sm:open:opacity-100 sm:starting:open:translate-y-4 sm:starting:open:opacity-0",
-        "backdrop:bg-ink/40 backdrop:opacity-0 open:backdrop:opacity-100 starting:open:backdrop:opacity-0",
+        "backdrop:bg-scrim/40 backdrop:opacity-0 open:backdrop:opacity-100 starting:open:backdrop:opacity-0",
         "backdrop:transition-all backdrop:duration-600 backdrop:ease-basecamp",
         "transition-all transition-discrete duration-600 ease-basecamp",
       )}

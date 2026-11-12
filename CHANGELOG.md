@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-12 · Dark mode and roles (branch design-system)
+- Dark theme in `globals.css`: warm near-black paper, slightly lighter cards, warm off-white text, olive and clay lifted with near-black text on fills. Every text pair passes 4.5:1 in both themes; `tests/ui/contrast.test.ts` checks both, and that the device and user-choice dark blocks match.
+- Follows the device by default. A new user menu (sidebar on desktop, account button on phones and in the client area) has Light / Dark / System, remembered on the device. A script in `<head>` applies the choice before first paint, so there is no flash (checked: saved Dark on a light device paints dark first).
+- Outfitter brand colours get a lifted version for dark mode so they still read; tested for dark brand colours.
+- `/admin/design` has the theme switch at the top; swatches and the contrast table follow it.
+- Roles written into CLAUDE.md. Navigation per role moved to `src/components/nav-items.ts`; a test checks agents never see Prices or Settings.
+- Light and dark screenshots in `docs/screenshots/design-system/`. 100 tests pass.
+- Next: merge PR #2, then the price list (Wesco's 2026 to 2027 price list PDF is in hand).
+
 ## 2026-11-12 · Design system (branch design-system)
 - Full design system from the brief, matching the Basecamp landing page: Fraunces headings, Geist body, colour tokens plus earthy success, warning and error colours (all text 4.5:1 or better), 24px cards, fully rounded buttons, one motion curve, reduced motion respected. Tables become cards below 760px.
 - Components in `src/components/ui/`: Button (primary, call to action, secondary, ghost, danger; md 44px, sm 40px), Input, Textarea, Select, Toggle, Checkbox, SegmentedControl (each with label, help text and inline error), Card, SectionHeading, Table, Badge, EmptyState, Skeleton loaders, Toast, Dialog (bottom sheet on phones), ShareToWhatsApp. Every interactive one has hover, press (0.98), focus ring, disabled, and loading where it applies. Spinners removed.

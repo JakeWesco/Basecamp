@@ -5,32 +5,15 @@ import { usePathname } from "next/navigation";
 import type { ComponentType } from "react";
 import { cx, motion, press } from "@/components/ui";
 import { Gear, House, Palette, Receipt, Tag, Tray, UsersThree, type IconProps } from "@/components/ui/icons";
+import { NAV, TOOLS as TOOL_ITEMS, type NavIcon, type NavItem } from "./nav-items";
 
 type Item = { label: string; href?: string; icon: ComponentType<IconProps> };
 
-// Only Dashboard is built. The rest show as "Coming soon" so the shape of the
-// app is visible from day one.
-const ITEMS: Record<"admin" | "agent", Item[]> = {
-  admin: [
-    { label: "Dashboard", href: "/admin", icon: House },
-    { label: "Leads", icon: Tray },
-    { label: "Quotes", icon: Receipt },
-    { label: "Clients", icon: UsersThree },
-    { label: "Prices", icon: Tag },
-    { label: "Settings", icon: Gear },
-  ],
-  agent: [
-    { label: "Dashboard", href: "/agent", icon: House },
-    { label: "Leads", icon: Tray },
-    { label: "Quotes", icon: Receipt },
-    { label: "Clients", icon: UsersThree },
-  ],
-};
+const ICONS: Record<NavIcon, ComponentType<IconProps>> = { House, Tray, Receipt, UsersThree, Tag, Gear, Palette };
+const withIcons = (items: NavItem[]): Item[] => items.map((i) => ({ ...i, icon: ICONS[i.icon] }));
 
-const TOOLS: Record<"admin" | "agent", Item[]> = {
-  admin: [{ label: "Design system", href: "/admin/design", icon: Palette }],
-  agent: [],
-};
+const ITEMS = { admin: withIcons(NAV.admin), agent: withIcons(NAV.agent) };
+const TOOLS = { admin: withIcons(TOOL_ITEMS.admin), agent: withIcons(TOOL_ITEMS.agent) };
 
 function isCurrent(pathname: string, href: string) {
   return pathname === href;

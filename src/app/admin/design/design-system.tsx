@@ -28,7 +28,9 @@ import {
   type Status,
 } from "@/components/ui";
 import * as Icons from "@/components/ui/icons";
-import { brandStyle, contrast, luminance } from "@/lib/brand-colors";
+import { brandAttributes, contrast, luminance } from "@/lib/brand-colors";
+import { subscribeTheme } from "@/lib/theme";
+import { ThemeSwitch } from "@/components/theme-switch";
 
 // ---------------------------------------------------------------------------
 // Tokens. Class names are written out in full so Tailwind generates them;
@@ -89,10 +91,13 @@ const PAIRS: [string, string][] = [
 
 const noSubscribe = () => () => {};
 
+// Re-read when the theme changes, so swatches and contrast follow the toggle.
+const themeVersion = () => document.documentElement.dataset.theme ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "system-dark" : "system-light");
+
 /** Reads a token from the page. Empty during the server render. */
 function useToken(name: string) {
   return useSyncExternalStore(
-    noSubscribe,
+    subscribeTheme,
     () => getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim(),
     () => "",
   );
@@ -126,6 +131,8 @@ function SwatchCard({ s }: { s: Swatch }) {
 
 function ContrastTable() {
   const mounted = useMounted();
+  // Recompute when the theme changes.
+  useSyncExternalStore(subscribeTheme, themeVersion, () => "");
   let rows: { id: string; fg: string; bg: string; ratio: number }[] = [];
   if (mounted) {
     const css = getComputedStyle(document.documentElement);
@@ -242,6 +249,12 @@ export function DesignSystem() {
 
   return (
     <div className="flex flex-col gap-16">
+      <div className="-mx-4 border-b border-line bg-paper px-4 py-3 sm:-mx-6 sm:px-6 lg:sticky lg:top-0 lg:z-20 lg:-mx-12 lg:px-12">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <p className="text-sm text-muted">Review every component in both themes. Your choice is remembered.</p>
+          <ThemeSwitch />
+        </div>
+      </div>
       <Block title="Colour" description="Tokens live in src/app/globals.css. Components use them through Tailwind, never as hex.">
         {COLOURS.map((g) => (
           <div key={g.group} className="flex flex-col gap-3">
@@ -489,7 +502,7 @@ export function DesignSystem() {
           description="Valid for 14 days."
           actions={<ShareToWhatsApp message="Here is your hunt quote." url="https://example.com/q/abc123" size="sm" />}
         >
-          <p className="text-muted">White, 24px corners, a 1px line border all the way round, 24px padding.</p>
+          <p className="text-muted">The card colour, 24px corners, a 1px line border all the way round, 24px padding.</p>
         </Card>
       </Block>
 
@@ -592,7 +605,7 @@ export function DesignSystem() {
                 Accent colour
               </label>
             </div>
-            <div style={brandStyle(brand)} className="rounded-card border border-line bg-paper p-6">
+            <div {...brandAttributes(brand)} className="rounded-card border border-line bg-paper p-6">
               <div className="flex flex-col gap-4">
                 <SectionHeading level={3} eyebrow="Your hunt" title="Plains game, June 2027" />
                 <div className="flex flex-wrap gap-3">

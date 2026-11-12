@@ -34,11 +34,24 @@ Read it before starting a phase. If this file and the doc disagree, the doc wins
 
 - **Tokens** (colours, radii, motion, breakpoint) live in `src/app/globals.css`. Use them through Tailwind (`bg-olive`, `text-muted`, `rounded-card`). Never write a hex value, rgb() or a Tailwind palette class anywhere else.
 - **Components** live in `src/components/ui/` (import from `@/components/ui`). Icons come only from `@/components/ui/icons` (Phosphor, light weight). Every new screen is built from these. If something is missing, add it there with all its states and show it on `/admin/design` (admins only), which shows every token and component.
-- **Layout:** admin and agent pages sit inside `src/components/area-shell.tsx` (sidebar on desktop, top bar and bottom tab bar on phones). Nav items live in `src/components/area-nav.tsx`.
-- **Two brand layers:** Basecamp's look is for the admin and agent areas only. Anything a hunter sees (client area, quotes, brochures) is wrapped in `<BrandScope>` from `src/lib/brand.tsx`, which swaps olive and clay for the outfitter's `brand_primary` and `brand_accent`.
+- **Layout:** one standard layout for everyone. Admin and agent pages sit inside `src/components/area-shell.tsx` (sidebar on desktop, top bar and bottom tab bar on phones). Nav items per role live in `src/components/nav-items.ts`.
+- **Light and dark:** both themes are defined in `globals.css` and every component and page must work in both. The default follows the device; the user menu has Light / Dark / System (`src/lib/theme.ts`, remembered in localStorage, applied before first paint). Check new screens in both on `/admin/design`.
+- **Two brand layers:** Basecamp's look is for the admin and agent areas only. Anything a hunter sees (client area, quotes, brochures) is wrapped in `<BrandScope>` from `src/lib/brand.tsx`, which swaps olive and clay for the outfitter's `brand_primary` and `brand_accent`, with a lifted version of each for dark mode.
 - **Rules:** clay (`variant="cta"`) only for the one most important action on a page. Spacing only 4, 8, 12, 16, 24, 32, 40, 48, 64, 80, 96 px. Font sizes text-xs to text-6xl. All text at least 4.5:1 contrast. Motion only cubic-bezier(0.32,0.72,0,1) at 500 to 700ms. Skeletons, never spinners.
 - **Copy:** sentence case, short sentences, no hyphens or dashes, no exclamation marks, no "seamless", "elevate" or "unlock". Errors say what happened and what to do.
-- `tests/ui/` enforces the colour, spacing, type, motion, contrast and copy rules.
+- `tests/ui/` enforces the colour, spacing, type, motion, contrast (both themes) and copy rules.
+
+## Roles
+
+Every feature follows these. Enforce them in RLS and in the server code, not only by hiding things in the UI, and test them.
+
+- **Admins:** everything.
+- **Agents:**
+  - Never change prices, the price list or settings, and never see Prices or Settings in the navigation (`tests/ui/nav.test.ts`).
+  - Capture leads (at least name, email and phone number) and see only their own leads.
+  - Build quotes from the outfitter's fixed price list. They can add a discount or a freebie only within the limits the outfitter sets in Settings (for example a maximum discount percentage, and a list of extras they may give free). Anything beyond those limits is blocked, with a clear message that says what the limit is.
+  - Every discount or freebie an agent gives is recorded on the quote with who gave it, so the outfitter can see it.
+- **Clients:** only their own records.
 
 ## How we build
 

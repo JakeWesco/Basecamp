@@ -1,11 +1,15 @@
 @import "tailwindcss";
 
-/* Basecamp's own look, matching the Basecamp landing page. Used in the admin
-   and agent areas. Pages a hunter sees (client area, quotes, brochures) wrap
+/* Basecamp's own look, matching the Basecamp landing page, in a light and a
+   dark theme. Dark follows the device unless the user picks Light or Dark in
+   the user menu (stored in localStorage, applied as data-theme on <html> by a
+   script in the root layout before first paint). Pages a hunter sees wrap
    themselves in <BrandScope>, which swaps olive and clay for the outfitter's
-   own colours (src/lib/brand.ts). Components use these tokens only: no hex
-   values anywhere else in src (tests/ui checks). */
+   own colours (src/lib/brand.tsx). Components use these tokens only: no hex
+   values anywhere else in src. tests/ui checks contrast in both themes. */
 :root {
+  color-scheme: light;
+  --scrim: #1e211c; /* behind dialogs, used at 40% */
   --paper: #f4f1ea; /* page background */
   --card: #ffffff; /* cards, inputs */
   --ink: #1e211c; /* main text */
@@ -37,6 +41,100 @@
   --ease: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+/* Dark: the same field notebook at night. Warm near-black paper, slightly
+   lighter cards, warm off-white ink. Olive and clay are lifted so they read
+   on dark, and carry near-black text when filled. The two blocks below must
+   stay identical (tests/ui/contrast.test.ts checks). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --scrim: #000000;
+    --paper: #181713;
+    --card: #23221d;
+    --ink: #eeeae0;
+    --muted: #b0ab9c;
+    --line: #3a382f;
+    --olive: #a7b885;
+    --olive-dark: #c2cfa3;
+    --sand: #5d5442;
+    --sand-tint: #35312a;
+    --clay: #e28c63;
+    --clay-dark: #eda886;
+    --success: #93c48c;
+    --success-tint: #233022;
+    --warning: #e0b15e;
+    --warning-tint: #352c19;
+    --error: #f08b7f;
+    --error-tint: #3e2521;
+    --error-dark: #f5a89f;
+    --on-olive: #181713;
+    --on-clay: #181713;
+    --on-error: #181713;
+    --on-ink: #181713;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --scrim: #000000;
+  --paper: #181713;
+  --card: #23221d;
+  --ink: #eeeae0;
+  --muted: #b0ab9c;
+  --line: #3a382f;
+  --olive: #a7b885;
+  --olive-dark: #c2cfa3;
+  --sand: #5d5442;
+  --sand-tint: #35312a;
+  --clay: #e28c63;
+  --clay-dark: #eda886;
+  --success: #93c48c;
+  --success-tint: #233022;
+  --warning: #e0b15e;
+  --warning-tint: #352c19;
+  --error: #f08b7f;
+  --error-tint: #3e2521;
+  --error-dark: #f5a89f;
+  --on-olive: #181713;
+  --on-clay: #181713;
+  --on-error: #181713;
+  --on-ink: #181713;
+}
+
+/* Outfitter brand colours (BrandScope). Each theme gets its own version, set
+   in src/lib/brand-colors.ts so the colour still reads on that background. */
+[data-brand-primary] {
+  --olive: var(--brand-olive);
+  --olive-dark: var(--brand-olive-dark);
+  --on-olive: var(--brand-on-olive);
+}
+[data-brand-accent] {
+  --clay: var(--brand-clay);
+  --clay-dark: var(--brand-clay-dark);
+  --on-clay: var(--brand-on-clay);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) [data-brand-primary] {
+    --olive: var(--brand-olive-night);
+    --olive-dark: var(--brand-olive-dark-night);
+    --on-olive: var(--brand-on-olive-night);
+  }
+  :root:not([data-theme="light"]) [data-brand-accent] {
+    --clay: var(--brand-clay-night);
+    --clay-dark: var(--brand-clay-dark-night);
+    --on-clay: var(--brand-on-clay-night);
+  }
+}
+:root[data-theme="dark"] [data-brand-primary] {
+  --olive: var(--brand-olive-night);
+  --olive-dark: var(--brand-olive-dark-night);
+  --on-olive: var(--brand-on-olive-night);
+}
+:root[data-theme="dark"] [data-brand-accent] {
+  --clay: var(--brand-clay-night);
+  --clay-dark: var(--brand-clay-dark-night);
+  --on-clay: var(--brand-on-clay-night);
+}
+
 @theme inline {
   --color-*: initial;
   --color-transparent: transparent;
@@ -63,6 +161,7 @@
   --color-on-clay: var(--on-clay);
   --color-on-error: var(--on-error);
   --color-on-ink: var(--on-ink);
+  --color-scrim: var(--scrim);
 
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;

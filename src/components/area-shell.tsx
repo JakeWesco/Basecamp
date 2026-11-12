@@ -1,29 +1,11 @@
 import { Suspense, type ReactNode } from "react";
 import { requireRole, type Role } from "@/lib/auth";
 import { BrandScope, getOutfitterBrand } from "@/lib/brand";
-import { signOut } from "@/app/login/actions";
-import { Button, LoadingLabel, Skeleton, SkeletonCard, cx } from "@/components/ui";
-import { SignOut } from "@/components/ui/icons";
+import { LoadingLabel, Skeleton, SkeletonCard, cx } from "@/components/ui";
+import { UserMenu } from "./user-menu";
 import { SidebarNav, TabBar } from "./area-nav";
 
 const LABEL: Record<Role, string> = { admin: "Admin", agent: "Agent", client: "Your hunt" };
-
-function SignOutButton({ compact }: { compact?: boolean }) {
-  return (
-    <form action={signOut}>
-      {compact ? (
-        <Button type="submit" variant="ghost" aria-label="Sign out" className="size-11 px-0">
-          <SignOut className="size-5" />
-        </Button>
-      ) : (
-        <Button type="submit" variant="secondary" size="sm" className="w-full">
-          <SignOut className="size-4" />
-          Sign out
-        </Button>
-      )}
-    </form>
-  );
-}
 
 /** Basecamp's own layout for the admin and agent areas. */
 async function StaffArea({ role, children }: { role: "admin" | "agent"; children: ReactNode }) {
@@ -38,14 +20,8 @@ async function StaffArea({ role, children }: { role: "admin" | "agent"; children
           <span className="text-sm text-muted">{LABEL[role]}</span>
         </div>
         <SidebarNav area={role} />
-        <div className="mt-auto flex flex-col gap-3 border-t border-line pt-4">
-          <div className="flex flex-col">
-            <span className="text-xs text-muted">Signed in as</span>
-            <span className="truncate text-sm font-medium text-ink" title={me.email}>
-              {me.email}
-            </span>
-          </div>
-          <SignOutButton />
+        <div className="mt-auto border-t border-line pt-4">
+          <UserMenu email={me.email} />
         </div>
         </div>
       </aside>
@@ -56,7 +32,7 @@ async function StaffArea({ role, children }: { role: "admin" | "agent"; children
           <span className="truncate font-heading text-xl text-ink">{me.outfitterName}</span>
           <span className="truncate text-xs text-muted">{me.email}</span>
         </div>
-        <SignOutButton compact />
+        <UserMenu email={me.email} variant="compact" />
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-8 pb-24 sm:px-6 lg:px-12 lg:py-12">{children}</main>
@@ -79,7 +55,7 @@ async function ClientArea({ children }: { children: ReactNode }) {
         ) : (
           <span className="font-heading text-xl text-ink">{brand.name}</span>
         )}
-        <SignOutButton compact />
+        <UserMenu email={me.email} variant="compact" />
       </header>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-12">{children}</main>
     </BrandScope>

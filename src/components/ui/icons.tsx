@@ -16,6 +16,9 @@ import {
   Tag as TagIcon,
   Tray as TrayIcon,
   UsersThree as UsersThreeIcon,
+  UserCircle as UserCircleIcon,
+  Moon as MoonIcon,
+  Sun as SunIcon,
   WarningCircle as WarningCircleIcon,
   WhatsappLogo as WhatsappLogoIcon,
   X as XIcon,
@@ -42,6 +45,9 @@ export const SignOut = light(SignOutIcon, "SignOut");
 export const Tag = light(TagIcon, "Tag");
 export const Tray = light(TrayIcon, "Tray");
 export const UsersThree = light(UsersThreeIcon, "UsersThree");
+export const UserCircle = light(UserCircleIcon, "UserCircle");
+export const Moon = light(MoonIcon, "Moon");
+export const Sun = light(SunIcon, "Sun");
 export const WarningCircle = light(WarningCircleIcon, "WarningCircle");
 export const WhatsappLogo = light(WhatsappLogoIcon, "WhatsappLogo");
 export const X = light(XIcon, "X");

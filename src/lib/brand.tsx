@@ -1,7 +1,7 @@
 import "server-only";
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { brandStyle, validHex, validLogoUrl, type Brand } from "./brand-colors";
+import { brandAttributes, validHex, validLogoUrl, type Brand } from "./brand-colors";
 
 /**
  * Reads an outfitter's name, logo and colours. RLS only returns the row to
@@ -25,7 +25,7 @@ export async function getOutfitterBrand(outfitterId: string, fallbackName = ""):
 /** Wrap any page a hunter sees: everything inside uses the outfitter's colours. */
 export function BrandScope({ brand, children, className }: { brand: Brand; children: ReactNode; className?: string }) {
   return (
-    <div data-brand="outfitter" style={brandStyle(brand)} className={className}>
+    <div data-brand="outfitter" {...brandAttributes(brand)} className={className}>
       {children}
     </div>
   );
