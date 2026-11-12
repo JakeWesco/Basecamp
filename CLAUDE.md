@@ -22,6 +22,14 @@ Read it before starting a phase. If this file and the doc disagree, the doc wins
 6. **Keep it simple.** Build fewer features and do each one properly. Outfitters coming from WhatsApp and email must be able to use it on day one.
 7. **Client privacy.** Passport, medical and dietary data and internal notes are never shown to other clients, and internal notes are never shown to clients at all.
 
+## Commands and layout
+
+- `npm run dev`, `npm run build`, `npm run lint`, `npm test` (vitest + PGlite, no Supabase needed).
+- SQL lives in `supabase/migrations/` (one file per change, never edit a shipped migration) and `supabase/seed.sql`.
+- Auth: `src/proxy.ts` refreshes the session and guards `/app`, `/admin`, `/agent`, `/client`. Role checks use `requireRole()` in `src/lib/auth.ts`.
+- This is Next.js 16 with Cache Components: read `node_modules/next/dist/docs/` before using an API, wrap request-time data (cookies, search params) in `<Suspense>`, and note `middleware` is now `proxy`.
+- Setup for a fresh environment: `docs/SETUP.md`.
+
 ## How we build
 
 - One phase at a time, one feature at a time. Finish and check it before starting the next.
