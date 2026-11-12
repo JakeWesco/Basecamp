@@ -5,6 +5,8 @@ import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { AgentLimitsForm } from "./agent-limits-form";
 import { CostEstimatesCard, type CostRow } from "./cost-estimates-card";
+import { PlannerCard } from "./planner-card";
+import { siteOrigin } from "@/lib/site";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -13,7 +15,7 @@ async function Settings() {
   const supabase = await createClient();
   const { data: outfitter } = await supabase
     .from("outfitters")
-    .select("active_season, default_currency, agent_max_discount_percent")
+    .select("active_season, default_currency, agent_max_discount_percent, slug, planner_enabled")
     .eq("id", me.outfitterId)
     .single();
   const season = outfitter?.active_season?.trim() || "Current";
@@ -35,6 +37,7 @@ async function Settings() {
 
   return (
     <>
+      <PlannerCard enabled={Boolean(outfitter?.planner_enabled)} url={`${await siteOrigin()}/plan/${outfitter?.slug ?? ""}`} />
       <AgentLimitsForm
         maxDiscount={Number(outfitter?.agent_max_discount_percent ?? 0)}
         rates={(rates ?? []).map((r) => ({ id: r.id as string, name: r.name as string, free: Boolean(r.agent_can_give_free) }))}
@@ -50,7 +53,7 @@ async function Settings() {
 export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-8">
-      <SectionHeading level={1} eyebrow="Admin" title="Settings" description="Rules for your team and what hunters see on quotes. Only admins see this page." />
+      <SectionHeading level={1} eyebrow="Admin" title="Settings" description="The hunt planner, rules for your team and what hunters see on quotes. Only admins see this page." />
       <Suspense
         fallback={
           <>

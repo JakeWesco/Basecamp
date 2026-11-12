@@ -182,7 +182,7 @@ function LeadFormInner({
               name="source"
               placeholder="Choose one"
               defaultValue={v("source", lead?.source ?? "")}
-              options={SOURCES.map((s) => ({ value: s, label: SOURCE_LABEL[s] }))}
+              options={[...SOURCES, ...(lead?.source === "planner" ? (["planner"] as const) : [])].map((s) => ({ value: s, label: SOURCE_LABEL[s] }))}
             />
           </div>
           <div className="grid gap-6 sm:grid-cols-2">

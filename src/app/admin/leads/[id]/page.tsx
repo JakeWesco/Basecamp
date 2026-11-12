@@ -8,8 +8,8 @@ export const metadata: Metadata = { title: "Lead" };
 
 async function View({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { lead, species } = await loadLead("admin", id);
-  return <LeadView area="admin" lead={lead} species={species} />;
+  const { lead, species, plan } = await loadLead("admin", id);
+  return <LeadView area="admin" lead={lead} species={species} plan={plan} />;
 }
 
 export default function LeadPage({ params }: PageProps<"/admin/leads/[id]">) {

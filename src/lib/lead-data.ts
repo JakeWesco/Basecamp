@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Budget, LeadStatus, Source, Temperature } from "@/lib/leads";
+import { LANGUAGE_NAME, LANGUAGES, readChosenPackage, type ChosenPackage } from "@/lib/planner";
 
 export type Area = "admin" | "agent";
 
@@ -25,11 +26,16 @@ export type Lead = {
   consent_at: string | null;
   created_at: string;
   mine: boolean;
+  /** Came in through the public hunt planner, not added by staff. */
+  fromPlanner: boolean;
   species: { id: string; name: string }[];
   quotes: { id: string; status: "draft" | "sent"; updated_at: string }[];
 };
 
 export type SpeciesOption = { id: string; name: string };
+
+/** What the hunter wrote and the package they picked, for planner leads (admins only). */
+export type LeadPlan = { request: string; language: string; created_at: string; pkg: ChosenPackage | null };
 
 const SELECT =
   "id, created_by, full_name, email, phone, country_code, source, rough_dates, budget_band, hunters, observers, notes, temperature, status, lost_reason, marketing_consent, consent_at, created_at, lead_species(species(id, name)), quotes(id, status, updated_at)";
@@ -39,6 +45,7 @@ function toLead(row: Record<string, unknown>, userId: string | undefined): Lead 
   return {
     ...(row as unknown as Lead),
     mine: row.created_by === userId,
+    fromPlanner: row.created_by == null,
     species: interests.map((i) => i.species).filter((s): s is { id: string; name: string } => Boolean(s)),
     quotes: ((row.quotes as Lead["quotes"]) ?? []).sort((a, b) => b.updated_at.localeCompare(a.updated_at)),
   };
@@ -57,17 +64,30 @@ export async function listLeads(area: Area): Promise<Lead[]> {
   return (data ?? []).map((r) => toLead(r as Record<string, unknown>, auth.user?.id));
 }
 
-export async function loadLead(area: Area, id: string): Promise<{ lead: Lead; species: SpeciesOption[]; isAdmin: boolean }> {
+export async function loadLead(
+  area: Area,
+  id: string,
+): Promise<{ lead: Lead; species: SpeciesOption[]; isAdmin: boolean; plan: LeadPlan | null }> {
   const me = await requireRole(area);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
-  const [{ data }, species] = await Promise.all([
+  const [{ data }, species, { data: request }] = await Promise.all([
     supabase.from("leads").select(SELECT).eq("id", id).eq("outfitter_id", me.outfitterId).maybeSingle(),
     speciesOptions(me.outfitterId),
+    // RLS: admins only. Agents never see planner leads anyway.
+    supabase.from("planner_requests").select("request, language, plan, chosen, created_at").eq("lead_id", id).maybeSingle(),
   ]);
   if (!data) notFound();
-  return { lead: toLead(data as Record<string, unknown>, auth.user?.id), species, isAdmin: me.role === "admin" };
+  const plan: LeadPlan | null = request
+    ? {
+        request: String(request.request),
+        language: (LANGUAGES as readonly string[]).includes(request.language) ? LANGUAGE_NAME[request.language as keyof typeof LANGUAGE_NAME] : "English",
+        created_at: String(request.created_at),
+        pkg: readChosenPackage(request.plan, request.chosen as number | null),
+      }
+    : null;
+  return { lead: toLead(data as Record<string, unknown>, auth.user?.id), species, isAdmin: me.role === "admin", plan };
 }
 
 /** The outfitter's species, for the "interested in" list. */

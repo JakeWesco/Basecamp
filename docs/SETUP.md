@@ -13,6 +13,7 @@
    - `supabase/migrations/20261112200000_leads.sql`
    - `supabase/migrations/20261112210000_quote_lock.sql`
    - `supabase/migrations/20261112220000_cost_estimates.sql`
+   - `supabase/migrations/20261112230000_hunt_planner.sql`
    - `supabase/seed.sql` (creates Wesco Safaris as outfitter #1)
    - `supabase/data/wesco-2026-2027-prices.sql` (Wesco's 2026/2027 price list; safe to run again)
    - `supabase/data/wesco-cost-estimates.sql` (a starting list of other costs, all switched off until an admin checks them in Settings; safe to run again)
@@ -36,6 +37,10 @@ npm run dev
 ```
 
 Open http://localhost:3000, sign in, and you land on the admin area.
+
+### The hunt planner's AI key
+
+The public hunt planner (`/plan/<outfitter>`) uses Claude. Create a key at console.anthropic.com (API keys) and add it to `.env.local` as `ANTHROPIC_API_KEY=...`, and to the hosting environment for production. Never commit it. Without it the planner page says it can't answer right now. Each plan costs a few US cents; the database limits plans to 8 per visitor per hour and 300 per outfitter per day. Switch the page on in Settings.
 
 ## 3. Checks
 
