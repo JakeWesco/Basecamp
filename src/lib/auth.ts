@@ -1,5 +1,6 @@
 import "server-only";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export type Role = "admin" | "agent" | "client";
@@ -27,6 +28,8 @@ export async function getMemberships(): Promise<{
   email: string | null;
   memberships: Membership[];
 }> {
+  // Who is signed in is always request-time: never prerender past this point.
+  await connection();
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return { userId: null, email: null, memberships: [] };

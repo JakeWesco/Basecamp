@@ -64,6 +64,8 @@ describe("UI copy", () => {
       // Text between tags, e.g. >Save now!<
       for (const m of line.matchAll(/>([^<>{}]*[A-Za-z][^<>{}]*)</g)) {
         const text = m[1];
+        // Code between JSX tags (a condition like `a && !b ?`), not text.
+        if (/&&|\|\||=>|\?\s|\(\w+\.|!\w+\./.test(text)) continue;
         if (/!/.test(text)) return `exclamation: ${text.trim()}`;
         if (/\s-\s|\w-\w/.test(text)) return `hyphen: ${text.trim()}`;
       }

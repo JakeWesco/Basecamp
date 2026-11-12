@@ -101,3 +101,24 @@ describe("policies", () => {
     expect(rows).toHaveLength(5);
   });
 });
+
+describe("indexes", () => {
+  // Supabase's "unindexed foreign keys" advisor: every foreign key in public
+  // needs an index that starts with the key's columns, in the same order.
+  it("every foreign key has a covering index", async () => {
+    const rows = (
+      await db.query<{ constraint: string }>(
+        `select c.conname as "constraint"
+         from pg_constraint c
+         join pg_namespace n on n.oid = c.connamespace
+         where c.contype = 'f' and n.nspname = 'public'
+           and not exists (
+             select 1 from pg_index i
+             where i.indrelid = c.conrelid
+               and (i.indkey::int2[])[0:array_length(c.conkey, 1) - 1] = c.conkey
+           )`,
+      )
+    ).rows;
+    expect(rows.map((r) => r.constraint)).toEqual([]);
+  });
+});
