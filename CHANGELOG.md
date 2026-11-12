@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-12 · Phase 1: lead inbox (branch phase-1-leads)
+- New tables `leads` and `lead_species`, and `quotes.lead_id` (migration `20261112200000_leads.sql`, applied live; advisors report nothing new). A lead needs a name and an email or a phone; phones are stored in international format. Optional: country, how they found us, species from the price list, rough dates, budget band, hunters, observers, notes. Temperature (hot, warm, cold), status (new, contacted, quoted, booked, lost, with a reason when lost), and marketing consent (off by default, records when given).
+- Roles in the database and tested: admins see every lead of their outfitter, agents only the leads they created, clients none, and no outfitter sees another's. Who created a lead is set by the database and can't be faked. A quote can only be linked to a lead its maker can see; deleting a lead keeps its quotes.
+- `/admin/leads` and `/agent/leads`: newest first, search (name, email, phone, species), filters for status and temperature, cards on phones, empty state.
+- Add a lead: name, phone, email and temperature on one phone screen, the rest under "More details". "Save and next" for show stands. "Paste from WhatsApp" fills the name, phone and email from a contact card, a chat message or plain text. A local number without a country asks for the code.
+- Lead page: WhatsApp, call and email buttons, details, status (with a reason when lost), quotes made from it, and "Make a quote", which starts a quote with the name, contact details and group size filled in and marks the lead as quoted.
+- Found while testing on a phone: the Save button sat under the bottom tab bar, and toasts covered buttons at the bottom of forms. The form is now tighter on phones, and toasts show at the top on phones.
+- Roles in CLAUDE.md updated: a lead needs a name plus an email or a phone.
+- Tests: 13 database tests for leads (who sees what, isolation, rules, quotes from leads), 12 for phone numbers, the form and WhatsApp paste. Letting agents see all leads fails them. 179 tests pass. Checked end to end with test leads (deleted afterwards).
+- Next: the rest of Phase 1 (quote lock and currency, all-in cost, AI planner, brochure).
+
 ## 2026-11-12 · Phase 1: quote share links (branch share-link)
 - Every quote can have a private link (`/q/<64 random characters>`) a hunter opens on any phone without logging in, in the outfitter's own logo and colours, light or dark. Shows the trip, daily rates and extras, trophy fees, free extras, discount, total, items on request and the outfitter's note, with "Ask a question" and "Message on WhatsApp" buttons to the outfitter's number. Search engines are told not to index it.
 - In the quote builder: "Create share link", then Share to WhatsApp (message filled in), Copy link, Open, and Turn off link. Turning a link off stops it working at once; turning it on again makes a new link.
