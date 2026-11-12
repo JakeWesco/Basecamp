@@ -3,9 +3,14 @@
 ## 1. Create the Supabase project
 
 1. Go to supabase.com, create a free project (region: closest to most users, e.g. a European region for US/EU hunters and African outfitters).
-2. In **SQL Editor**, run these two files in order:
+2. In **SQL Editor**, run every file in `supabase/migrations/` in name order, then the seed:
    - `supabase/migrations/20261112000000_foundation.sql`
+   - `supabase/migrations/20261112130000_advisor_fixes.sql`
    - `supabase/seed.sql` (creates Wesco Safaris as outfitter #1)
+
+   With the Supabase CLI logged in, the same thing is
+   `supabase db query --linked --project-ref <ref> -f <file>` for each file.
+   Afterwards run `supabase db advisors --linked --project-ref <ref>`: it should report no warnings.
 3. In **Authentication → Users**, click **Add user** and create your own login (email + password, tick "auto confirm").
 4. Back in **SQL Editor**, make yourself Wesco's first admin:
 
