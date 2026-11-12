@@ -5,7 +5,10 @@ describe("money", () => {
   it("shows cents only when there are cents", () => {
     expect(formatMoney(3600, "USD")).toBe("$3,600");
     expect(formatMoney(3600.5, "USD")).toBe("$3,600.50");
-    expect(formatMoney(1250, "ZAR")).toContain("1,250");
+    expect(formatMoney(1250, "ZAR")).toBe("R1,250");
+    expect(formatMoney(1250, "NAD")).toBe("N$1,250");
+    expect(formatMoney(-780, "ZAR")).toBe("-R780");
+    expect(formatMoney(6335, "EUR")).toBe("€6,335");
   });
 
   it("reads amounts the way people type them", () => {

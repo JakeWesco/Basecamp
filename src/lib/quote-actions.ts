@@ -87,6 +87,53 @@ export async function setStatus(area: string, quoteId: string, status: "draft" |
   return { ok: true, message: status === "sent" ? "Marked as sent" : "Back to draft" };
 }
 
+/**
+ * Brings every price-list line up to today's price list, keeping quantities
+ * and freebies, and holds the prices again from today if the quote was
+ * locked. New lines are added before the old ones go, so nothing is lost if
+ * one fails.
+ */
+export async function refreshPrices(area: string, quoteId: string): Promise<ActionResult> {
+  await requireStaff();
+  const supabase = await createClient();
+  const { data: quote } = await supabase.from("quotes").select("id, locked_at").eq("id", quoteId).maybeSingle();
+  if (!quote) return { ok: false, error: "That quote was not found. Refresh the page." };
+  const { data: lines } = await supabase
+    .from("quote_lines")
+    .select("id, kind, rate_id, species_id, quantity, is_free, sort_order, description")
+    .eq("quote_id", quoteId)
+    .in("kind", ["rate", "trophy_fee"]);
+
+  const skipped: string[] = [];
+  for (const l of lines ?? []) {
+    const { error } = await supabase.from("quote_lines").insert({
+      quote_id: quoteId,
+      kind: l.kind,
+      rate_id: l.rate_id,
+      species_id: l.species_id,
+      quantity: l.quantity,
+      is_free: l.is_free,
+      sort_order: l.sort_order,
+    });
+    if (error) {
+      skipped.push(l.description as string);
+      continue;
+    }
+    await supabase.from("quote_lines").delete().eq("id", l.id);
+  }
+  if (quote.locked_at) {
+    // The database sets the lock to now; the value sent here is ignored.
+    await supabase.from("quotes").update({ locked_at: new Date().toISOString() }).eq("id", quoteId);
+  }
+  revalidatePath(`${base(null, area)}/${quoteId}`);
+  if (skipped.length)
+    return {
+      ok: false,
+      error: `Updated, except ${skipped.join(", ")}: no longer on the price list for this season. Remove it or ask an admin.`,
+    };
+  return { ok: true, message: quote.locked_at ? "Prices updated and held again from today" : "Prices updated to today's price list" };
+}
+
 /** Turns the hunter link on (a fresh random link every time) or off. */
 export async function setShareLink(area: string, quoteId: string, on: boolean): Promise<ActionResult> {
   await requireStaff();

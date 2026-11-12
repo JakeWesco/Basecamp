@@ -21,6 +21,7 @@ export type SharedQuote = {
     currency: string;
     discount_percent: number;
     notes: string | null;
+    locked_at: string | null;
   };
   outfitter: { name: string; email: string | null; phone: string | null; website: string | null };
   brand: Brand;

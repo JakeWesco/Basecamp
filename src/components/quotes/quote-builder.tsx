@@ -4,7 +4,9 @@ import { useState, useTransition, type ReactNode } from "react";
 import { Badge, Button, buttonClasses, Card, Checkbox, Dialog, Input, SectionHeading, Select, ShareToWhatsApp, cx, useToast } from "@/components/ui";
 import { WarningCircle, X } from "@/components/ui/icons";
 import { formatMoney, UNIT_LABEL } from "@/lib/prices";
-import { addLine, deleteQuote, removeLine, setDiscount, setShareLink, setStatus, updateLine, type ActionResult } from "@/lib/quote-actions";
+import { addLine, deleteQuote, refreshPrices, removeLine, setDiscount, setShareLink, setStatus, updateLine, type ActionResult } from "@/lib/quote-actions";
+import { convert, VIEW_CURRENCIES } from "@/lib/currency";
+import { LOCK_DAYS, lockState, longDate } from "@/lib/quote-lock";
 import { defaultQuantity, lineTotal, quoteTotals, type QuoteLine } from "@/lib/quotes";
 import type { QuoteContext } from "@/lib/quote-data";
 import { QuoteDetailsForm } from "./quote-details-form";
@@ -133,6 +135,14 @@ export function QuoteBuilder(ctx: QuoteContext) {
                 <dt className="font-semibold">Total</dt>
                 <dd className="text-3xl font-semibold">{money(totals.total)}</dd>
               </div>
+              {(() => {
+                const others = VIEW_CURRENCIES.filter((c) => c !== quote.currency)
+                  .map((c) => ({ c, v: convert(totals.total, c, ctx.fxRates) }))
+                  .filter((x) => x.v !== null);
+                return others.length && totals.total > 0 ? (
+                  <p className="text-sm text-muted">About {others.map((x) => formatMoney(x.v!, x.c)).join(", ")}</p>
+                ) : null;
+              })()}
               {(totals.onRequest > 0 || totals.atCost > 0) && (
                 <p className="text-sm text-muted">
                   {[
@@ -146,6 +156,8 @@ export function QuoteBuilder(ctx: QuoteContext) {
               )}
             </dl>
           </Card>
+
+          <LockCard lockedAt={quote.locked_at} busy={busy} onRefresh={() => run(() => refreshPrices(area, quote.id))} />
 
           <ShareCard
             url={ctx.shareUrl}
@@ -417,6 +429,35 @@ function AddPicker({
       </div>
       {hint && <p className="text-sm text-muted">{hint}</p>}
     </div>
+  );
+}
+
+/** Whether the hunter can rely on these prices, and a way to bring them up to date. */
+function LockCard({ lockedAt, busy, onRefresh }: { lockedAt: string | null; busy: boolean; onRefresh: () => void }) {
+  const lock = lockState(lockedAt);
+  return (
+    <Card title="Prices">
+      <div className="flex flex-col gap-4">
+        {lock.state === "open" && (
+          <p className="text-muted">Not held yet. Once you send the quote or create its share link, the prices are held for {LOCK_DAYS} days.</p>
+        )}
+        {lock.state === "held" && (
+          <p className="text-success">
+            Held until {longDate(lock.until)}, {lock.daysLeft} {lock.daysLeft === 1 ? "day" : "days"} left.
+          </p>
+        )}
+        {lock.state === "expired" && (
+          <p className="flex items-start gap-2 rounded-field bg-warning-tint px-4 py-3 text-sm font-medium text-warning">
+            <WarningCircle className="mt-1 size-4 shrink-0" />
+            Expired on {longDate(lock.until)}. Update to today&apos;s prices, then send it again.
+          </p>
+        )}
+        <Button variant={lock.state === "expired" ? "primary" : "secondary"} size="sm" loading={busy} loadingLabel="Updating…" onClick={onRefresh}>
+          Update to today&apos;s prices
+        </Button>
+        <p className="text-sm text-muted">Takes the prices from your current price list. Quantities and freebies stay the same.</p>
+      </div>
+    </Card>
   );
 }
 

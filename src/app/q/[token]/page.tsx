@@ -2,11 +2,15 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { buttonClasses, Card, LoadingLabel, Skeleton, SkeletonCard } from "@/components/ui";
-import { WhatsappLogo } from "@/components/ui/icons";
+import { CheckCircle, WarningCircle, WhatsappLogo } from "@/components/ui/icons";
 import { BrandScope } from "@/lib/brand";
-import { formatMoney, UNIT_LABEL } from "@/lib/prices";
+import { UNIT_LABEL } from "@/lib/prices";
 import { lineTotal, quoteTotals } from "@/lib/quotes";
 import { getSharedQuote, type SharedLine } from "@/lib/shared-quote";
+import { CurrencySwitch, Money, MoneyProvider } from "@/components/quotes/money-view";
+import { ratesOn } from "@/lib/fx";
+import { lockState, longDate as lockDate, rateDay } from "@/lib/quote-lock";
+import type { ReactNode } from "react";
 import { siteOrigin, whatsAppChat } from "@/lib/site";
 
 // The page a hunter opens from WhatsApp: no login, the outfitter's own logo
@@ -40,18 +44,24 @@ function Fact({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Lines({ title, lines, money }: { title: string; lines: SharedLine[]; money: (n: number) => string }) {
+function Lines({ title, lines, money }: { title: string; lines: SharedLine[]; money: (n: number) => ReactNode }) {
   if (!lines.length) return null;
   return (
     <Card title={title}>
       <ul className="flex flex-col divide-y divide-line">
         {lines.map((l, i) => {
-          const each =
-            l.price_type === "fixed"
-              ? `${l.quantity === 1 ? "" : `${l.quantity} × `}${money(l.unit_price ?? 0)} ${l.unit === "per_item" && l.quantity === 1 ? "" : UNIT_LABEL[l.unit]}`.trim()
-              : l.price_type === "cost_price"
-                ? "At cost"
-                : "Price on request";
+          const each: ReactNode =
+            l.price_type === "fixed" ? (
+              <>
+                {l.quantity === 1 ? "" : `${l.quantity} × `}
+                <Money amount={l.unit_price ?? 0} cents />
+                {l.unit === "per_item" && l.quantity === 1 ? "" : ` ${UNIT_LABEL[l.unit]}`}
+              </>
+            ) : l.price_type === "cost_price" ? (
+              "At cost"
+            ) : (
+              "Price on request"
+            );
           const total = l.price_type !== "fixed" ? "" : l.is_free ? "Included free" : money(lineTotal(l));
           return (
             <li key={i} className="flex items-start justify-between gap-4 py-4 first:pt-0 last:pb-0">
@@ -75,8 +85,10 @@ async function SharedQuotePage({ params }: { params: Promise<{ token: string }> 
   const data = await getSharedQuote(token);
   if (!data) notFound();
   const { quote, outfitter, brand, lines } = data;
-  const money = (n: number) => formatMoney(n, quote.currency);
+  const money = (n: number) => <Money amount={n} />;
   const totals = quoteTotals(lines, quote.discount_percent);
+  const lock = lockState(quote.locked_at);
+  const rates = await ratesOn(quote.currency, rateDay(quote.locked_at));
   const url = `${await siteOrigin()}/q/${token}`;
   const ask = whatsAppChat(outfitter.phone, `Hi ${outfitter.name}, I have a question about my hunt quote: ${url}`);
   const website = outfitter.website ? (outfitter.website.startsWith("http") ? outfitter.website : `https://${outfitter.website}`) : null;
@@ -101,6 +113,7 @@ async function SharedQuotePage({ params }: { params: Promise<{ token: string }> 
         </div>
       </header>
 
+      <MoneyProvider base={quote.currency} rates={rates}>
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12">
         <div className="flex flex-col gap-2">
           <p className="text-sm font-semibold tracking-wider text-olive uppercase">Hunt quote, {quote.season} season</p>
@@ -114,6 +127,25 @@ async function SharedQuotePage({ params }: { params: Promise<{ token: string }> 
           <Fact label={quote.observers === 1 ? "Observer" : "Observers"} value={String(quote.observers)} />
           <Fact label="Arriving" value={quote.arrival_date ? longDate(quote.arrival_date) : "To be agreed"} />
         </div>
+
+        {lock.state === "held" && (
+          <p className="flex items-start gap-3 rounded-card border border-success-tint bg-success-tint px-6 py-4 text-success">
+            <CheckCircle className="mt-1 size-5 shrink-0" />
+            <span>
+              <strong className="font-semibold">Prices held until {lockDate(lock.until)}.</strong> {outfitter.name} keeps these prices for you until then.
+            </span>
+          </p>
+        )}
+        {lock.state === "expired" && (
+          <p className="flex items-start gap-3 rounded-card border border-warning-tint bg-warning-tint px-6 py-4 text-warning">
+            <WarningCircle className="mt-1 size-5 shrink-0" />
+            <span>
+              <strong className="font-semibold">These prices were held until {lockDate(lock.until)}.</strong> Ask {outfitter.name} for an updated quote.
+            </span>
+          </p>
+        )}
+
+        <CurrencySwitch />
 
         <Lines title="Daily rates and extras" lines={lines.filter((l) => l.kind !== "trophy_fee")} money={money} />
         <Lines title="Trophy fees" lines={lines.filter((l) => l.kind === "trophy_fee")} money={money} />
@@ -178,6 +210,7 @@ async function SharedQuotePage({ params }: { params: Promise<{ token: string }> 
           </div>
         </Card>
       </main>
+      </MoneyProvider>
     </BrandScope>
   );
 }
