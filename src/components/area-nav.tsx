@@ -47,8 +47,10 @@ export function SidebarNav({ area }: { area: "admin" | "agent" }) {
         <li key={item.label}>
           <span aria-disabled="true" className={cx(row, "cursor-not-allowed text-muted")}>
             <Icon className="size-5" />
-            <span className="flex-1">{item.label}</span>
-            <span className="rounded-full border border-line px-2 text-xs">Coming soon</span>
+            <span className="flex flex-col">
+              {item.label}
+              <span className="text-xs">Coming soon</span>
+            </span>
           </span>
         </li>
       );

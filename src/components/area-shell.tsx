@@ -31,7 +31,8 @@ async function StaffArea({ role, children }: { role: "admin" | "agent"; children
   return (
     <div className="flex min-h-dvh flex-1 flex-col lg:flex-row">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-8 border-r border-line bg-card p-6 lg:flex">
+      <aside className="hidden w-64 shrink-0 border-r border-line bg-card lg:block">
+        <div className="sticky top-0 flex h-dvh flex-col gap-8 overflow-y-auto p-6">
         <div className="flex flex-col gap-1">
           <span className="font-heading text-2xl text-ink">{me.outfitterName}</span>
           <span className="text-sm text-muted">{LABEL[role]}</span>
@@ -45,6 +46,7 @@ async function StaffArea({ role, children }: { role: "admin" | "agent"; children
             </span>
           </div>
           <SignOutButton />
+        </div>
         </div>
       </aside>
 

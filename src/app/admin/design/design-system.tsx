@@ -102,8 +102,12 @@ function useMounted() {
   return useSyncExternalStore(noSubscribe, () => true, () => false);
 }
 
+/** Six digit hex from a computed value. The build may shorten six digits to three. */
 function hexOf(value: string) {
-  return /^#[0-9a-f]{6}$/i.test(value) ? value : null;
+  const v = value.trim().toLowerCase();
+  if (/^#[0-9a-f]{6}$/.test(v)) return v;
+  if (/^#[0-9a-f]{3}$/.test(v)) return "#" + [...v.slice(1)].map((c) => c + c).join("");
+  return null;
 }
 
 function SwatchCard({ s }: { s: Swatch }) {
@@ -226,7 +230,7 @@ export function DesignSystem() {
   const olive = useToken("olive");
   const clay = useToken("clay");
   const [picked, setPicked] = useState<{ primary?: string; accent?: string }>({});
-  const brand = olive && clay ? { primary: picked.primary ?? olive, accent: picked.accent ?? clay } : null;
+  const brand = olive && clay ? { primary: picked.primary ?? hexOf(olive) ?? "", accent: picked.accent ?? hexOf(clay) ?? "" } : null;
 
   function save() {
     setSaving(true);
