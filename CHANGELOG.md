@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-12 · Phase 1: quote share links (branch share-link)
+- Every quote can have a private link (`/q/<64 random characters>`) a hunter opens on any phone without logging in, in the outfitter's own logo and colours, light or dark. Shows the trip, daily rates and extras, trophy fees, free extras, discount, total, items on request and the outfitter's note, with "Ask a question" and "Message on WhatsApp" buttons to the outfitter's number. Search engines are told not to index it.
+- In the quote builder: "Create share link", then Share to WhatsApp (message filled in), Copy link, Open, and Turn off link. Turning a link off stops it working at once; turning it on again makes a new link.
+- Database: `quotes.share_token` and `shared_at` (migration `20261112190000_quote_share_links.sql`, applied live). Nobody chooses a token: the database replaces anything sent with a fresh random one. Hunters read through `public.shared_quote(token)`, the only public function anyone can call; it returns nothing private (no email, phone, ids, or who gave a discount). Supabase's advisor warns about that function, as expected.
+- Wrong or turned off links show "This quote link doesn't work" with what to do.
+- Observer rates now start at days times observers. Trophy fees no longer repeat their price on the hunter page.
+- Tests: 8 for share links (fresh tokens, agents only on their own quotes, what visitors see, wrong and turned off links). Checked that letting a chosen token through fails the tests. 154 tests pass. Checked end to end with a test quote (deleted afterwards).
+- Next: the personalised brochure (lodge, animals, day by day plan) builds on this page, once there are photos and text to show.
+
 ## 2026-11-12 · Phase 1: quote builder (branch quotes)
 - New tables `quotes` and `quote_lines`, plus agent limits: `outfitters.agent_max_discount_percent` and `rates.agent_can_give_free`. Applied to the live database; advisors report nothing new.
 - Rules in the database (triggers and RLS), per CLAUDE.md Roles: admins see every quote, agents only their own, clients none. Rate and trophy fee prices always come from the price list for the quote's season; agents can change quantities, never prices; only admins can add a line that isn't on the price list. Agents are blocked above the discount limit ("The highest discount you can give is 10%. Ask an admin for more.") and from making anything free that isn't allowed. Every discount and freebie records who gave it, and that can't be faked.

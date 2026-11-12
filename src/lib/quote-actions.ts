@@ -87,6 +87,20 @@ export async function setStatus(area: string, quoteId: string, status: "draft" |
   return { ok: true, message: status === "sent" ? "Marked as sent" : "Back to draft" };
 }
 
+/** Turns the hunter link on (a fresh random link every time) or off. */
+export async function setShareLink(area: string, quoteId: string, on: boolean): Promise<ActionResult> {
+  await requireStaff();
+  const supabase = await createClient();
+  // The database replaces this placeholder with a new random token; nobody picks the link.
+  const { error, count } = await supabase
+    .from("quotes")
+    .update({ share_token: on ? "0".repeat(64) : null }, { count: "exact" })
+    .eq("id", quoteId);
+  if (error || !count) return { ok: false, error: error ? dbMessage(error) : "That quote was not found. Refresh the page." };
+  revalidatePath(`${base(null, area)}/${quoteId}`);
+  return { ok: true, message: on ? "Link ready to share" : "Link turned off. The old link no longer works." };
+}
+
 export async function addLine(
   area: string,
   quoteId: string,

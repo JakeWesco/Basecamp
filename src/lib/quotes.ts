@@ -38,6 +38,8 @@ export type Quote = {
   notes: string | null;
   status: "draft" | "sent";
   updated_at: string;
+  share_token: string | null;
+  shared_at: string | null;
 };
 
 const cents = (n: number) => Math.round(n * 100) / 100;
@@ -74,9 +76,18 @@ export function quoteTotals(lines: LinePrice[], discountPercent: number): Totals
   return { subtotal, discount, total: cents(subtotal - discount), freeValue: cents(freeValue), onRequest, atCost };
 }
 
-/** How many of a rate a quote needs by default: per day rates for every hunter, every day. */
-export function defaultQuantity(unit: Unit, quote: Pick<Quote, "hunting_days" | "hunters">): number {
-  return unit === "per_day" ? quote.hunting_days * quote.hunters : 1;
+/**
+ * How many of a rate a quote needs by default: per day rates for every hunter,
+ * every day; an observer rate for every observer, every day. People can change it.
+ */
+export function defaultQuantity(
+  unit: Unit,
+  quote: Pick<Quote, "hunting_days" | "hunters"> & { observers?: number },
+  rateName = "",
+): number {
+  if (unit !== "per_day") return 1;
+  const people = /observer/i.test(rateName) ? Math.max(quote.observers ?? 0, 1) : quote.hunters;
+  return quote.hunting_days * people;
 }
 
 // ---------------------------------------------------------------------------
