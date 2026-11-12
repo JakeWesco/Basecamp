@@ -12,8 +12,10 @@
    - `supabase/migrations/20261112190000_quote_share_links.sql`
    - `supabase/migrations/20261112200000_leads.sql`
    - `supabase/migrations/20261112210000_quote_lock.sql`
+   - `supabase/migrations/20261112220000_cost_estimates.sql`
    - `supabase/seed.sql` (creates Wesco Safaris as outfitter #1)
    - `supabase/data/wesco-2026-2027-prices.sql` (Wesco's 2026/2027 price list; safe to run again)
+   - `supabase/data/wesco-cost-estimates.sql` (a starting list of other costs, all switched off until an admin checks them in Settings; safe to run again)
 
    With the Supabase CLI logged in, the same thing is
    `supabase db query --linked --project-ref <ref> -f <file>` for each file.

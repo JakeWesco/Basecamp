@@ -6,6 +6,7 @@ import { siteOrigin } from "@/lib/site";
 import { ratesOn } from "@/lib/fx";
 import { rateDay } from "@/lib/quote-lock";
 import type { Rates } from "@/lib/currency";
+import type { CostEstimate } from "@/lib/costs";
 import type { Rate, SpeciesFee } from "@/lib/prices";
 import { quoteTotals, type Quote, type QuoteLine } from "@/lib/quotes";
 
@@ -81,6 +82,8 @@ export type QuoteContext = {
   outfitterName: string;
   /** Exchange rates for the lock day (or today), for a rough guide in other currencies. */
   fxRates: Rates | null;
+  /** The outfitter's active "other costs", for the all-in estimate. */
+  costs: (CostEstimate & { id: string })[];
 };
 
 /** One quote with its lines and the price list it is built from. */
@@ -92,7 +95,7 @@ export async function loadQuote(area: Area, id: string): Promise<QuoteContext> {
   const { data: quote } = await supabase.from("quotes").select("*").eq("id", id).eq("outfitter_id", me.outfitterId).maybeSingle();
   if (!quote) notFound();
 
-  const [{ data: lines }, { data: rates }, { data: species }, { data: fees }, { data: outfitter }] = await Promise.all([
+  const [{ data: lines }, { data: rates }, { data: species }, { data: fees }, { data: outfitter }, { data: costs }] = await Promise.all([
     supabase.from("quote_lines").select("*").eq("quote_id", id).order("sort_order").order("created_at"),
     supabase
       .from("rates")
@@ -104,6 +107,13 @@ export async function loadQuote(area: Area, id: string): Promise<QuoteContext> {
     supabase.from("species").select("id, name, is_published").eq("outfitter_id", me.outfitterId).order("sort_order").order("name"),
     supabase.from("trophy_fees").select("id, species_id, amount, on_request").eq("outfitter_id", me.outfitterId).eq("season", quote.season),
     supabase.from("outfitters").select("agent_max_discount_percent, name").eq("id", me.outfitterId).single(),
+    supabase
+      .from("cost_estimates")
+      .select("id, name, note, basis, low, high")
+      .eq("outfitter_id", me.outfitterId)
+      .eq("is_active", true)
+      .order("sort_order")
+      .order("name"),
   ]);
 
   const feeBySpecies = new Map((fees ?? []).map((f) => [f.species_id as string, f]));
@@ -111,7 +121,7 @@ export async function loadQuote(area: Area, id: string): Promise<QuoteContext> {
     area,
     isAdmin: me.role === "admin",
     userId: auth.user?.id ?? "",
-    quote: { ...(quote as Quote), discount_percent: Number(quote.discount_percent) },
+    quote: { ...(quote as Quote), discount_percent: Number(quote.discount_percent), excluded_costs: (quote.excluded_costs as string[]) ?? [] },
     lines: (lines ?? []).map(toLine),
     rates: (rates ?? []).map((r) => ({ ...(r as Rate & { agent_can_give_free: boolean }), amount: num(r.amount) })),
     fees: (species ?? [])
@@ -130,6 +140,7 @@ export async function loadQuote(area: Area, id: string): Promise<QuoteContext> {
     maxDiscount: Number(outfitter?.agent_max_discount_percent ?? 0),
     shareUrl: quote.share_token ? `${await siteOrigin()}/q/${quote.share_token}` : null,
     outfitterName: (outfitter?.name as string) ?? "",
+    costs: (costs ?? []).map((c) => ({ ...(c as CostEstimate & { id: string }), low: Number(c.low), high: Number(c.high) })),
     fxRates: await ratesOn(quote.currency as string, rateDay(quote.locked_at as string | null)),
   };
 }

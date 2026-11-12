@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-12 · Phase 1: all-in cost (branch phase-1-all-in-cost)
+- New table `cost_estimates`: the costs hunters pay to others (flights, permits, insurance, dip and pack, taxidermy, shipping, tips) as low and high estimates, per person, hunter, observer, trophy, trip, or hunter per day. Admins manage them; agents read them; clients and other outfitters can't. `quotes.excluded_costs` lets a quote leave some out (migration `20261112220000_cost_estimates.sql`, applied live; advisors report nothing new).
+- Settings: "Other costs to plan for", with add, edit, remove and an "On quotes" switch per cost.
+- A starting list of seven typical South African estimates for Wesco is loaded, all switched off (`supabase/data/wesco-cost-estimates.sql`). They are Claude's estimates, not Wesco's figures: check them in Settings and switch on the ones that fit.
+- Quote builder: an "Other costs" card with a tick box per cost (e.g. no taxidermy) and the whole trip estimate.
+- Hunter page: "Other costs to plan for", each with its estimate for this trip and a note, and "Estimate for the whole trip: $17,340 to $24,380", also in euro, pounds or rand. On screen it says "whole trip", not "all-in", to keep to the no hyphens rule.
+- Tests: 6 database tests (who can do what, isolation, ranges, what the hunter page shows), 6 for the maths and the form. 203 tests pass. Checked end to end with a test quote; the numbers match by hand. Costs switched back off and the quote deleted afterwards.
+- Next: AI hunt planner and budget mode, then the brochure.
+
 ## 2026-11-12 · Phase 1: quote lock and currency (branch phase-1-quote-lock)
 - A quote's prices are held for 14 days from when it goes to the hunter (marked as sent, or its share link is created, whichever is first). `quotes.locked_at` is set by the database only: it can't be backdated, moved or cleared (migration `20261112210000_quote_lock.sql`, applied live). Line prices were already copied onto the quote, so price list changes never touch a quote.
 - Hunter page: "Prices held until 26 November 2026", or, once expired, "These prices were held until ... Ask Wesco Safaris for an updated quote." A switch shows the quote in USD, EUR, GBP or ZAR: a guide at the European Central Bank rate of the lock day ("You pay in US dollars"). Unit prices keep cents in other currencies so they add up.

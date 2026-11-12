@@ -4,7 +4,8 @@ import { useState, useTransition, type ReactNode } from "react";
 import { Badge, Button, buttonClasses, Card, Checkbox, Dialog, Input, SectionHeading, Select, ShareToWhatsApp, cx, useToast } from "@/components/ui";
 import { WarningCircle, X } from "@/components/ui/icons";
 import { formatMoney, UNIT_LABEL } from "@/lib/prices";
-import { addLine, deleteQuote, refreshPrices, removeLine, setDiscount, setShareLink, setStatus, updateLine, type ActionResult } from "@/lib/quote-actions";
+import { addLine, deleteQuote, refreshPrices, removeLine, setCostIncluded, setDiscount, setShareLink, setStatus, updateLine, type ActionResult } from "@/lib/quote-actions";
+import { allIn, BASIS_LABEL } from "@/lib/costs";
 import { convert, VIEW_CURRENCIES } from "@/lib/currency";
 import { LOCK_DAYS, lockState, longDate } from "@/lib/quote-lock";
 import { defaultQuantity, lineTotal, quoteTotals, type QuoteLine } from "@/lib/quotes";
@@ -156,6 +157,14 @@ export function QuoteBuilder(ctx: QuoteContext) {
               )}
             </dl>
           </Card>
+
+          <OtherCostsCard
+            ctx={ctx}
+            total={totals.total}
+            money={money}
+            busy={busy}
+            onToggle={(id, include) => run(() => setCostIncluded(area, quote.id, id, include))}
+          />
 
           <LockCard lockedAt={quote.locked_at} busy={busy} onRefresh={() => run(() => refreshPrices(area, quote.id))} />
 
@@ -429,6 +438,76 @@ function AddPicker({
       </div>
       {hint && <p className="text-sm text-muted">{hint}</p>}
     </div>
+  );
+}
+
+/** The costs the hunter pays to others, and the all-in estimate the hunter sees. */
+function OtherCostsCard({
+  ctx,
+  total,
+  money,
+  busy,
+  onToggle,
+}: {
+  ctx: QuoteContext;
+  total: number;
+  money: (n: number) => string;
+  busy: boolean;
+  onToggle: (id: string, include: boolean) => void;
+}) {
+  const { quote, lines, costs } = ctx;
+  const excluded = new Set(quote.excluded_costs);
+  const trip = {
+    hunting_days: quote.hunting_days,
+    hunters: quote.hunters,
+    observers: quote.observers,
+    trophies: lines.filter((l) => l.kind === "trophy_fee").reduce((s, l) => s + l.quantity, 0),
+  };
+  const all = allIn(total, costs, trip);
+  const byId = new Map(all.lines.map((l) => [l.id, l]));
+  const included = allIn(
+    total,
+    costs.filter((c) => !excluded.has(c.id)),
+    trip,
+  );
+  return (
+    <Card title="Other costs">
+      <div className="flex flex-col gap-4">
+        {costs.length === 0 ? (
+          <p className="text-muted">None switched on yet. An admin adds them in Settings, like flights, dip and pack and shipping.</p>
+        ) : (
+          <>
+            <p className="text-sm text-muted">Paid by the hunter to others. Shown on the quote as estimates.</p>
+            <ul className="flex flex-col gap-1">
+              {costs.map((c) => {
+                const line = byId.get(c.id);
+                return (
+                  <li key={c.id} className="flex flex-col">
+                    <Checkbox
+                      label={c.name}
+                      checked={!excluded.has(c.id)}
+                      disabled={busy || !line}
+                      onChange={(e) => onToggle(c.id, e.currentTarget.checked)}
+                      hint={
+                        line
+                          ? `${money(line.lowTotal)} to ${money(line.highTotal)}`
+                          : `Not needed for this trip (${BASIS_LABEL[c.basis]})`
+                      }
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="flex flex-col gap-1 border-t border-line pt-3">
+              <span className="text-sm text-muted">Whole trip estimate for the hunter</span>
+              <span className="tabular text-xl font-semibold">
+                {included.low === included.high ? money(included.low) : `${money(included.low)} to ${money(included.high)}`}
+              </span>
+            </div>
+          </>
+        )}
+      </div>
+    </Card>
   );
 }
 

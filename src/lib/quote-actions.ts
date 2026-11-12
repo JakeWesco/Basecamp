@@ -134,6 +134,21 @@ export async function refreshPrices(area: string, quoteId: string): Promise<Acti
   return { ok: true, message: quote.locked_at ? "Prices updated and held again from today" : "Prices updated to today's price list" };
 }
 
+/** Includes or leaves out one of the outfitter's other costs on this quote. */
+export async function setCostIncluded(area: string, quoteId: string, costId: string, include: boolean): Promise<ActionResult> {
+  await requireStaff();
+  const supabase = await createClient();
+  const { data: quote } = await supabase.from("quotes").select("excluded_costs").eq("id", quoteId).maybeSingle();
+  if (!quote) return { ok: false, error: "That quote was not found. Refresh the page." };
+  const current = new Set((quote.excluded_costs as string[]) ?? []);
+  if (include) current.delete(costId);
+  else current.add(costId);
+  const { error } = await supabase.from("quotes").update({ excluded_costs: [...current] }).eq("id", quoteId);
+  if (error) return { ok: false, error: dbMessage(error) };
+  revalidatePath(`${base(null, area)}/${quoteId}`);
+  return { ok: true };
+}
+
 /** Turns the hunter link on (a fresh random link every time) or off. */
 export async function setShareLink(area: string, quoteId: string, on: boolean): Promise<ActionResult> {
   await requireStaff();
