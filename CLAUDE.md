@@ -29,6 +29,7 @@ Read it before starting a phase. If this file and the doc disagree, the doc wins
 - Auth: `src/proxy.ts` refreshes the session and guards `/app`, `/admin`, `/agent`, `/client`. Role checks use `requireRole()` in `src/lib/auth.ts`.
 - This is Next.js 16 with Cache Components: read `node_modules/next/dist/docs/` before using an API, wrap request-time data (cookies, search params) in `<Suspense>`, and note `middleware` is now `proxy`.
 - Setup for a fresh environment: `docs/SETUP.md`.
+- UI: build screens from `src/components/ui/` (see them all at `/design` in dev). Colours only from the tokens in `src/app/globals.css`, never hex or Tailwind palette classes; `tests/ui/` fails if a component hard-codes one. Clay (`variant="cta"`) is for the one main call to action on a screen; olive is the normal primary. Headings are Fraunces (h1-h3 automatically, `font-heading` elsewhere).
 
 ## How we build
 

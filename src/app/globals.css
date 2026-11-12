@@ -1,33 +1,120 @@
 @import "tailwindcss";
 
-/* Basecamp's own neutral theme. Outfitter branding (logo, colours) is applied
-   per outfitter on client-facing pages, never hard-coded here. */
+/* Basecamp's own look, matching the Basecamp landing page. Outfitter branding
+   (logo, colours) is applied per outfitter on client-facing pages, never
+   hard-coded here. Components use these tokens only: no hex values in
+   src/components. */
 :root {
-  --background: #f6f5f1;
-  --surface: #ffffff;
-  --foreground: #1b1d1a;
-  --muted: #5e635b;
-  --line: #e2e0d8;
-  --primary: #2f4a3a;
-  --primary-hover: #243a2d;
-  --danger: #a3352b;
+  --paper: #f4f1ea; /* page background */
+  --card: #ffffff;
+  --ink: #1e211c; /* text */
+  --muted: #55594e; /* secondary text */
+  --line: #ddd7c8; /* borders */
+  --olive: #4a5a3a; /* primary */
+  --olive-dark: #2f3b24;
+  --sand: #c8b98f;
+  --sand-tint: #eae3d2;
+  --clay: #b5562f; /* the one main call to action per screen */
+  --clay-dark: #8f4223; /* its hover */
+  --danger: #a3352b; /* destructive actions and errors (not on the landing page) */
+  --danger-dark: #7f271f;
+  --on-dark: #ffffff; /* text on olive, clay and danger */
+
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-foreground: var(--foreground);
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-line: var(--line);
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
+  --color-olive: var(--olive);
+  --color-olive-dark: var(--olive-dark);
+  --color-sand: var(--sand);
+  --color-sand-tint: var(--sand-tint);
+  --color-clay: var(--clay);
+  --color-clay-dark: var(--clay-dark);
   --color-danger: var(--danger);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-danger-dark: var(--danger-dark);
+  --color-on-dark: var(--on-dark);
+
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: fraunces, Georgia, serif;
+
+  /* Cards 24px; things inside a card follow outer radius minus its padding
+     (24px card, 8px inset -> 16px; 12px inset -> 12px). Buttons and pills
+     are fully rounded. */
+  --radius-card: 24px;
+  --radius-inner: 16px;
+  --radius-field: 12px;
+
+  --ease-basecamp: var(--ease);
+  --default-transition-duration: 600ms;
+  --default-transition-timing-function: var(--ease);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+/* Fraunces as on the landing page, for headings that aren't h1-h3. */
+@utility font-heading {
+  font-family: var(--font-display);
+  font-variation-settings:
+    "SOFT" 100,
+    "WONK" 0;
+  font-weight: 500;
+  font-style: normal;
+}
+
+@layer base {
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-variation-settings:
+      "SOFT" 100,
+      "WONK" 0;
+    font-weight: 500;
+    font-style: normal;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--clay);
+    outline-offset: 3px;
+  }
+
+  /* Prices and amounts line up in columns. */
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+  /* No movement on press or hover; colour changes still show. */
+  .motion-press:active,
+  .motion-press:hover {
+    transform: none !important;
+  }
 }
