@@ -1,6 +1,6 @@
 // Navigation per role. Roles rules (CLAUDE.md, "Roles"): agents never see
 // Prices or Settings. tests/ui/nav.test.ts checks this.
-// Only Dashboard is built. The rest show as "Coming soon" so the shape of the
+// Only Dashboard and Prices are built. The rest show as "Coming soon" so the shape of the
 // app is visible from day one.
 
 export type NavIcon = "House" | "Tray" | "Receipt" | "UsersThree" | "Tag" | "Gear" | "Palette";
@@ -13,7 +13,7 @@ export const NAV: Record<StaffArea, NavItem[]> = {
     { label: "Leads", icon: "Tray" },
     { label: "Quotes", icon: "Receipt" },
     { label: "Clients", icon: "UsersThree" },
-    { label: "Prices", icon: "Tag" },
+    { label: "Prices", href: "/admin/prices", icon: "Tag" },
     { label: "Settings", icon: "Gear" },
   ],
   agent: [

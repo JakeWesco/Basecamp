@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-12 · Phase 1: price list (branch price-list)
+- New tables `species`, `trophy_fees` (one per species per season, or price on request) and `rates` (daily rates and extras: fixed, at cost or on request). Prices are tagged with the season, so quotes can lock to it later. Every member reads them; only admins change them (RLS and server checks). A fee can't point at another outfitter's species.
+- Wesco's 2026/2027 price list from the PDF loaded: 46 species (5 on request) and 6 daily rates. Data file `supabase/data/wesco-2026-2027-prices.sql`, safe to run again. Applied to the live database.
+- `/admin/prices`: trophy fees and daily rates in two tabs, species search, add, edit and remove in a dialog, clear error messages, light and dark. Prices is live in the admin menu; agents still never see it.
+- Tests: 15 for the price list (who can read, who can change, cross-outfitter, data counts and amounts), price form checks, and a new guard that every foreign key has an index. Checked that breaking a policy fails the tests.
+- Advisor finding fixed in a new migration (index for the trophy fee to species key). Only remaining warning: leaked password protection is off in Supabase Auth.
+- Dev fix: auth checks are marked request-time, which removes the "Date.now() while prerendering" warning.
+- Next: the quote builder (agents quote from this list within the outfitter's discount limits).
+
 ## 2026-11-12 · Dark mode and roles (branch design-system)
 - Dark theme in `globals.css`: warm near-black paper, slightly lighter cards, warm off-white text, olive and clay lifted with near-black text on fills. Every text pair passes 4.5:1 in both themes; `tests/ui/contrast.test.ts` checks both, and that the device and user-choice dark blocks match.
 - Follows the device by default. A new user menu (sidebar on desktop, account button on phones and in the client area) has Light / Dark / System, remembered on the device. A script in `<head>` applies the choice before first paint, so there is no flash (checked: saved Dark on a light device paints dark first).
