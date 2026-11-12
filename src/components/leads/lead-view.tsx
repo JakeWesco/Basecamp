@@ -5,13 +5,24 @@ import { useState, useTransition } from "react";
 import { Badge, Button, buttonClasses, Card, Dialog, Input, SectionHeading, Select, useToast } from "@/components/ui";
 import { WarningCircle, WhatsappLogo } from "@/components/ui/icons";
 import { deleteLead, quoteFromLead, setLeadStatus, type ActionResult } from "@/lib/lead-actions";
-import type { Lead, SpeciesOption } from "@/lib/lead-data";
+import type { Lead, LeadPlan, SpeciesOption } from "@/lib/lead-data";
+import { formatMoney } from "@/lib/prices";
 import { BUDGET_LABEL, COUNTRIES, formatPhone, LEAD_STATUSES, SOURCE_LABEL, STATUS_LABEL, type LeadStatus } from "@/lib/leads";
 import { LeadStatusBadge, TemperatureBadge } from "./lead-badges";
 import { LeadForm } from "./lead-form";
 
 /** One lead: how to reach them, where they stand, and a quote in one click. */
-export function LeadView({ area, lead, species }: { area: "admin" | "agent"; lead: Lead; species: SpeciesOption[] }) {
+export function LeadView({
+  area,
+  lead,
+  species,
+  plan = null,
+}: {
+  area: "admin" | "agent";
+  lead: Lead;
+  species: SpeciesOption[];
+  plan?: LeadPlan | null;
+}) {
   const toast = useToast();
   const [busy, start] = useTransition();
   const [editing, setEditing] = useState(false);
@@ -44,7 +55,7 @@ export function LeadView({ area, lead, species }: { area: "admin" | "agent"; lea
     ["Observers", lead.observers != null ? String(lead.observers) : null],
     ["Interested in", lead.species.length ? lead.species.map((s) => s.name).join(", ") : null],
     ["Marketing email", lead.marketing_consent ? `Agreed on ${new Date(lead.consent_at ?? lead.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}` : "Not agreed"],
-    ["Added", `${new Date(lead.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}${area === "admin" ? (lead.mine ? " by you" : " by an agent") : ""}`],
+    ["Added", `${new Date(lead.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}${area === "admin" ? (lead.fromPlanner ? " through the hunt planner" : lead.mine ? " by you" : " by an agent") : ""}`],
   ];
 
   return (
@@ -103,6 +114,8 @@ export function LeadView({ area, lead, species }: { area: "admin" | "agent"; lea
             </div>
           </Card>
 
+          {plan && <PlannerCard plan={plan} />}
+
           <Card title="Details">
             <dl className="flex flex-col divide-y divide-line">
               {facts.map(([label, value]) => (
@@ -132,9 +145,13 @@ export function LeadView({ area, lead, species }: { area: "admin" | "agent"; lea
                 </ul>
               )}
               <Button variant="cta" loading={busy} loadingLabel="Making the quote…" onClick={() => run(() => quoteFromLead(area, lead.id))}>
-                {lead.quotes.length ? "Make another quote" : "Make a quote"}
+                {plan?.pkg ? (lead.quotes.length ? "Make another quote from their package" : "Make a quote from their package") : lead.quotes.length ? "Make another quote" : "Make a quote"}
               </Button>
-              <p className="text-sm text-muted">Starts a quote with their name, contact details and group size filled in.</p>
+              <p className="text-sm text-muted">
+                {plan?.pkg
+                  ? "Starts a quote with their details and the package they picked, priced from today's price list. Check it before you send it."
+                  : "Starts a quote with their name, contact details and group size filled in."}
+              </p>
             </div>
           </Card>
 
@@ -204,5 +221,55 @@ export function LeadView({ area, lead, species }: { area: "admin" | "agent"; lea
         )}
       </Dialog>
     </div>
+  );
+}
+
+/** What the hunter wrote in the planner and the package they picked. */
+function PlannerCard({ plan }: { plan: LeadPlan }) {
+  const { pkg } = plan;
+  return (
+    <Card title="From the hunt planner" description={`Written in ${plan.language} on ${new Date(plan.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}.`}>
+      <div className="flex flex-col gap-6">
+        <blockquote className="rounded-inner bg-paper p-4 whitespace-pre-line">{plan.request}</blockquote>
+        {pkg && (
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm text-muted">The package they picked</span>
+              <span className="text-lg font-semibold">{pkg.title}</span>
+              <span className="text-muted">
+                {pkg.hunting_days} hunting days, {pkg.hunters} {pkg.hunters === 1 ? "hunter" : "hunters"}
+                {pkg.observers ? `, ${pkg.observers} ${pkg.observers === 1 ? "observer" : "observers"}` : ""}
+              </span>
+            </div>
+            <ul className="flex flex-col divide-y divide-line">
+              {[...pkg.rates, ...pkg.trophies].map((item, i) => (
+                <li key={i} className="flex justify-between gap-4 py-2 first:pt-0 last:pb-0">
+                  <span>{item.name}</span>
+                  <span className="tabular text-muted">{item.quantity === 1 ? "" : `× ${item.quantity}`}</span>
+                </li>
+              ))}
+            </ul>
+            {pkg.total !== null && (
+              <p className="text-sm text-muted">
+                The planner showed them <span className="tabular font-medium text-ink">{formatMoney(pkg.total, pkg.currency)}</span> for this package.
+              </p>
+            )}
+            {pkg.itinerary.length > 0 && (
+              <details className="rounded-inner border border-line">
+                <summary className="cursor-pointer list-none px-4 py-3 font-medium">Day by day plan they saw</summary>
+                <ol className="flex flex-col gap-2 px-4 pb-4">
+                  {pkg.itinerary.map((day, i) => (
+                    <li key={i} className="flex gap-3">
+                      <span className="tabular w-6 shrink-0 text-muted">{i + 1}</span>
+                      <span>{day}</span>
+                    </li>
+                  ))}
+                </ol>
+              </details>
+            )}
+          </div>
+        )}
+      </div>
+    </Card>
   );
 }

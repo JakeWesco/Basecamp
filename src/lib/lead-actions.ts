@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { checkLead, checkLostReason, formatPhone, LEAD_STATUSES, type LeadFieldErrors, type LeadStatus } from "@/lib/leads";
+import { readChosenPackage } from "@/lib/planner";
 
 // Lead actions for admins and agents. RLS decides whose leads each person
 // can see and change (CLAUDE.md, Roles); these actions check the input and
@@ -110,6 +111,9 @@ export async function quoteFromLead(area: string, leadId: string): Promise<Actio
     .eq("id", leadId)
     .maybeSingle();
   if (!lead) return { ok: false, error: "That lead was not found. Refresh the page." };
+  // A planner lead brings the package the hunter picked (admins only, by RLS).
+  const { data: request } = await supabase.from("planner_requests").select("plan, chosen").eq("lead_id", lead.id).maybeSingle();
+  const pkg = request ? readChosenPackage(request.plan, request.chosen as number | null) : null;
   const { data: quote, error } = await supabase
     .from("quotes")
     .insert({
@@ -119,12 +123,23 @@ export async function quoteFromLead(area: string, leadId: string): Promise<Actio
       hunter_name: lead.full_name,
       hunter_email: lead.email,
       hunter_phone: lead.phone ? formatPhone(lead.phone) : null,
-      hunters: lead.hunters ?? 1,
-      observers: lead.observers ?? 0,
+      hunters: pkg?.hunters ?? lead.hunters ?? 1,
+      observers: pkg?.observers ?? lead.observers ?? 0,
+      ...(pkg ? { hunting_days: pkg.hunting_days } : {}),
     })
     .select("id")
     .single();
   if (error || !quote) return { ok: false, error: dbMessage(error) };
+  if (pkg) {
+    // One line at a time: something removed from the price list since is skipped, not fatal.
+    // The database prices each line from today's price list.
+    for (const r of pkg.rates) {
+      await supabase.from("quote_lines").insert({ quote_id: quote.id, kind: "rate", rate_id: r.rate_id, quantity: r.quantity, sort_order: 1 });
+    }
+    for (const t of pkg.trophies) {
+      await supabase.from("quote_lines").insert({ quote_id: quote.id, kind: "trophy_fee", species_id: t.species_id, quantity: t.quantity, sort_order: 2 });
+    }
+  }
   if (lead.status === "new" || lead.status === "contacted") {
     await supabase.from("leads").update({ status: "quoted" }).eq("id", lead.id);
   }

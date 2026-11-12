@@ -37,3 +37,13 @@ export async function saveAgentLimits(_prev: LimitsState, form: FormData): Promi
   revalidatePath("/admin/settings");
   return { ok: true, message: "Agent limits saved" };
 }
+
+/** Switches the public hunt planner page on or off. Admins only. */
+export async function setPlannerEnabled(on: boolean): Promise<LimitsState> {
+  const me = await requireRole("admin");
+  const supabase = await createClient();
+  const { error } = await supabase.from("outfitters").update({ planner_enabled: on }).eq("id", me.outfitterId);
+  if (error) return { ok: false, error: "The planner setting was not saved. Check your connection and try again." };
+  revalidatePath("/admin/settings");
+  return { ok: true, message: on ? "Hunt planner is on" : "Hunt planner is off" };
+}

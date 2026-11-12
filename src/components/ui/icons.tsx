@@ -10,6 +10,8 @@ import {
   Gear as GearIcon,
   House as HouseIcon,
   Info as InfoIcon,
+  Microphone as MicrophoneIcon,
+  MicrophoneSlash as MicrophoneSlashIcon,
   Palette as PaletteIcon,
   Receipt as ReceiptIcon,
   SignOut as SignOutIcon,
@@ -39,6 +41,8 @@ export const CheckCircle = light(CheckCircleIcon, "CheckCircle");
 export const Gear = light(GearIcon, "Gear");
 export const House = light(HouseIcon, "House");
 export const Info = light(InfoIcon, "Info");
+export const Microphone = light(MicrophoneIcon, "Microphone");
+export const MicrophoneSlash = light(MicrophoneSlashIcon, "MicrophoneSlash");
 export const Palette = light(PaletteIcon, "Palette");
 export const Receipt = light(ReceiptIcon, "Receipt");
 export const SignOut = light(SignOutIcon, "SignOut");

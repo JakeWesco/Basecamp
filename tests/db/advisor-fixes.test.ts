@@ -13,10 +13,11 @@ beforeAll(async () => {
 });
 
 describe("functions exposed through the API", () => {
-  it("the only SECURITY DEFINER function in public anyone can call is the share link lookup", async () => {
-    // shared_quote is public on purpose: hunters open a quote link without
-    // logging in. tests/db/share-links.test.ts checks it needs the exact
-    // token and shows nothing private. Any other function here is a hole.
+  it("the only SECURITY DEFINER functions in public anyone can call are the share link and the hunt planner", async () => {
+    // These are public on purpose: hunters open a quote link and plan a hunt
+    // without logging in. tests/db/share-links.test.ts and
+    // tests/db/planner.test.ts check they show nothing private and check
+    // every input themselves. Any other function here is a hole.
     const rows = (
       await db.query<{ name: string }>(
         `select p.proname as name from pg_proc p
@@ -25,7 +26,13 @@ describe("functions exposed through the API", () => {
                 or has_function_privilege('authenticated', p.oid, 'execute'))`,
       )
     ).rows;
-    expect(rows.map((r) => r.name)).toEqual(["shared_quote"]);
+    expect(rows.map((r) => r.name).sort()).toEqual([
+      "planner_finish",
+      "planner_outfitter",
+      "planner_start",
+      "planner_submit",
+      "shared_quote",
+    ]);
   });
 
   it("a signed-out request cannot call bootstrap_admin", async () => {

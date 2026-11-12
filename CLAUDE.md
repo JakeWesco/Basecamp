@@ -52,6 +52,7 @@ Every feature follows these. Enforce them in RLS and in the server code, not onl
   - Build quotes from the outfitter's fixed price list. They can add a discount or a freebie only within the limits the outfitter sets in Settings (for example a maximum discount percentage, and a list of extras they may give free). Anything beyond those limits is blocked, with a clear message that says what the limit is.
   - Every discount or freebie an agent gives is recorded on the quote with who gave it, so the outfitter can see it.
 - **Clients:** only their own records.
+- **Signed-out hunters:** only the share link of a quote (`shared_quote`) and the hunt planner (`planner_*` functions), when the outfitter has switched it on. Planner leads have no creator, so only admins see them.
 
 ## How we build
 

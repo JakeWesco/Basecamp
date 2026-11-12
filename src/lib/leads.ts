@@ -17,8 +17,11 @@ export const STATUS_LABEL: Record<LeadStatus, string> = {
 };
 
 export const SOURCES = ["show", "referral", "website", "whatsapp", "social_media", "past_client", "agent", "other"] as const;
-export type Source = (typeof SOURCES)[number];
+/** Leads from the public hunt planner. Not offered in the form, but kept when such a lead is edited. */
+export const PLANNER_SOURCE = "planner" as const;
+export type Source = (typeof SOURCES)[number] | typeof PLANNER_SOURCE;
 export const SOURCE_LABEL: Record<Source, string> = {
+  planner: "Hunt planner",
   show: "Show",
   referral: "Referral",
   website: "Website",
@@ -186,7 +189,7 @@ export function checkLead(input: Record<string, unknown>): { ok: true; value: Le
       email: email || null,
       phone,
       country_code: country,
-      source: pick(input.source, SOURCES),
+      source: pick(input.source, [...SOURCES, PLANNER_SOURCE]),
       rough_dates: roughDates || null,
       budget_band: pick(input.budget, BUDGETS),
       hunters: hunters as number | null,
