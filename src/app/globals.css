@@ -1,33 +1,282 @@
 @import "tailwindcss";
 
-/* Basecamp's own neutral theme. Outfitter branding (logo, colours) is applied
-   per outfitter on client-facing pages, never hard-coded here. */
+/* Basecamp's own look, matching the Basecamp landing page, in a light and a
+   dark theme. Dark follows the device unless the user picks Light or Dark in
+   the user menu (stored in localStorage, applied as data-theme on <html> by a
+   script in the root layout before first paint). Pages a hunter sees wrap
+   themselves in <BrandScope>, which swaps olive and clay for the outfitter's
+   own colours (src/lib/brand.tsx). Components use these tokens only: no hex
+   values anywhere else in src. tests/ui checks contrast in both themes. */
 :root {
-  --background: #f6f5f1;
-  --surface: #ffffff;
-  --foreground: #1b1d1a;
-  --muted: #5e635b;
-  --line: #e2e0d8;
-  --primary: #2f4a3a;
-  --primary-hover: #243a2d;
-  --danger: #a3352b;
+  color-scheme: light;
+  --scrim: #1e211c; /* behind dialogs, used at 40% */
+  --paper: #f4f1ea; /* page background */
+  --card: #ffffff; /* cards, inputs */
+  --ink: #1e211c; /* main text */
+  --muted: #55594e; /* secondary text */
+  --line: #ddd7c8; /* borders and dividers */
+  --olive: #4a5a3a; /* primary actions, selected states */
+  --olive-dark: #2f3b24; /* dark bands, hover on olive */
+  --sand: #c8b98f; /* soft fills, tags */
+  --sand-tint: #eae3d2; /* soft fills, icon backgrounds */
+  --clay: #b5562f; /* the one most important action on a page */
+  --clay-dark: #8f4223; /* its hover */
+
+  /* Status, muted and earthy. Each text colour meets 4.5:1 on card, paper
+     and its own tint (tests/ui/contrast.test.ts). */
+  --success: #3e6b3f;
+  --success-tint: #e3ecdc;
+  --warning: #875a12;
+  --warning-tint: #f5e8cb;
+  --error: #a3352b;
+  --error-tint: #f7e3de;
+  --error-dark: #7f271f;
+
+  /* Text on a filled colour. BrandScope picks ink or white per brand colour. */
+  --on-olive: #ffffff;
+  --on-clay: #ffffff;
+  --on-error: #ffffff;
+  --on-ink: #ffffff;
+
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Dark: the same field notebook at night. Warm near-black paper, slightly
+   lighter cards, warm off-white ink. Olive and clay are lifted so they read
+   on dark, and carry near-black text when filled. The two blocks below must
+   stay identical (tests/ui/contrast.test.ts checks). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --scrim: #000000;
+    --paper: #181713;
+    --card: #23221d;
+    --ink: #eeeae0;
+    --muted: #b0ab9c;
+    --line: #3a382f;
+    --olive: #a7b885;
+    --olive-dark: #c2cfa3;
+    --sand: #5d5442;
+    --sand-tint: #35312a;
+    --clay: #e28c63;
+    --clay-dark: #eda886;
+    --success: #93c48c;
+    --success-tint: #233022;
+    --warning: #e0b15e;
+    --warning-tint: #352c19;
+    --error: #f08b7f;
+    --error-tint: #3e2521;
+    --error-dark: #f5a89f;
+    --on-olive: #181713;
+    --on-clay: #181713;
+    --on-error: #181713;
+    --on-ink: #181713;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --scrim: #000000;
+  --paper: #181713;
+  --card: #23221d;
+  --ink: #eeeae0;
+  --muted: #b0ab9c;
+  --line: #3a382f;
+  --olive: #a7b885;
+  --olive-dark: #c2cfa3;
+  --sand: #5d5442;
+  --sand-tint: #35312a;
+  --clay: #e28c63;
+  --clay-dark: #eda886;
+  --success: #93c48c;
+  --success-tint: #233022;
+  --warning: #e0b15e;
+  --warning-tint: #352c19;
+  --error: #f08b7f;
+  --error-tint: #3e2521;
+  --error-dark: #f5a89f;
+  --on-olive: #181713;
+  --on-clay: #181713;
+  --on-error: #181713;
+  --on-ink: #181713;
+}
+
+/* Outfitter brand colours (BrandScope). Each theme gets its own version, set
+   in src/lib/brand-colors.ts so the colour still reads on that background. */
+[data-brand-primary] {
+  --olive: var(--brand-olive);
+  --olive-dark: var(--brand-olive-dark);
+  --on-olive: var(--brand-on-olive);
+}
+[data-brand-accent] {
+  --clay: var(--brand-clay);
+  --clay-dark: var(--brand-clay-dark);
+  --on-clay: var(--brand-on-clay);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) [data-brand-primary] {
+    --olive: var(--brand-olive-night);
+    --olive-dark: var(--brand-olive-dark-night);
+    --on-olive: var(--brand-on-olive-night);
+  }
+  :root:not([data-theme="light"]) [data-brand-accent] {
+    --clay: var(--brand-clay-night);
+    --clay-dark: var(--brand-clay-dark-night);
+    --on-clay: var(--brand-on-clay-night);
+  }
+}
+:root[data-theme="dark"] [data-brand-primary] {
+  --olive: var(--brand-olive-night);
+  --olive-dark: var(--brand-olive-dark-night);
+  --on-olive: var(--brand-on-olive-night);
+}
+:root[data-theme="dark"] [data-brand-accent] {
+  --clay: var(--brand-clay-night);
+  --clay-dark: var(--brand-clay-dark-night);
+  --on-clay: var(--brand-on-clay-night);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-foreground: var(--foreground);
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-line: var(--line);
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
-  --color-danger: var(--danger);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-olive: var(--olive);
+  --color-olive-dark: var(--olive-dark);
+  --color-sand: var(--sand);
+  --color-sand-tint: var(--sand-tint);
+  --color-clay: var(--clay);
+  --color-clay-dark: var(--clay-dark);
+  --color-success: var(--success);
+  --color-success-tint: var(--success-tint);
+  --color-warning: var(--warning);
+  --color-warning-tint: var(--warning-tint);
+  --color-error: var(--error);
+  --color-error-tint: var(--error-tint);
+  --color-error-dark: var(--error-dark);
+  --color-on-olive: var(--on-olive);
+  --color-on-clay: var(--on-clay);
+  --color-on-error: var(--on-error);
+  --color-on-ink: var(--on-ink);
+  --color-scrim: var(--scrim);
+
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: fraunces, Georgia, serif;
+
+  /* Tables turn into cards below 760px. */
+  --breakpoint-md: 760px;
+
+  /* Cards 24px. Inside a card, radius = outer radius minus the padding
+     between them (24 card, 8 inset -> 16; 12 inset -> 12). Buttons, pills
+     and segmented controls are fully rounded. */
+  --radius-card: 24px;
+  --radius-inner: 16px;
+  --radius-field: 12px;
+
+  --ease-basecamp: var(--ease);
+  --default-transition-duration: 600ms;
+  --default-transition-timing-function: var(--ease);
+
+  /* Skeletons breathe instead of spinning. */
+  --animate-breathe: breathe 700ms var(--ease) infinite alternate;
+  @keyframes breathe {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0.45;
+    }
+  }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+/* Hover only on devices that really hover (no sticky hover on phones), and
+   [data-force] lets /admin/design show each state without a mouse. */
+@custom-variant is-hover {
+  @media (hover: hover) {
+    &:hover:not(:disabled, [aria-disabled="true"]) {
+      @slot;
+    }
+  }
+  &[data-force~="hover"] {
+    @slot;
+  }
+}
+@custom-variant is-active {
+  &:active:not(:disabled, [aria-disabled="true"]) {
+    @slot;
+  }
+  &[data-force~="active"] {
+    @slot;
+  }
+}
+
+/* Fraunces as on the landing page, for headings that aren't h1-h3. */
+@utility font-heading {
+  font-family: var(--font-display);
+  font-variation-settings:
+    "SOFT" 100,
+    "WONK" 0;
+  font-weight: 500;
+  font-style: normal;
+}
+
+@layer base {
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-variation-settings:
+      "SOFT" 100,
+      "WONK" 0;
+    font-weight: 500;
+    font-style: normal;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible,
+  [data-force~="focus"] {
+    outline: 2px solid var(--clay);
+    outline-offset: 3px;
+  }
+
+  /* Prices and amounts line up in columns. */
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+  /* No movement on press or hover; colour changes still show. */
+  .motion-press:active,
+  .motion-press:hover,
+  .motion-press[data-force] {
+    transform: none !important;
+  }
 }

@@ -1,8 +1,11 @@
+import { EmptyState, SectionHeading } from "@/components/ui";
+import { Tray } from "@/components/ui/icons";
+
 export default function AgentHome() {
   return (
-    <section className="flex flex-col gap-2">
-      <h1 className="text-2xl font-semibold">My leads</h1>
-      <p className="text-muted">Lead capture arrives in a later phase.</p>
-    </section>
+    <div className="flex flex-col gap-8">
+      <SectionHeading level={1} eyebrow="Agent" title="Dashboard" description="The leads you bring in and where each one stands." />
+      <EmptyState icon={<Tray />} title="No leads yet. Leads you capture will show up here." />
+    </div>
   );
 }

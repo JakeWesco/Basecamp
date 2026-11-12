@@ -22,10 +22,14 @@ export const HOME: Record<Role, string> = {
  * The signed-in user's active memberships, highest role first.
  * RLS guarantees this only ever returns the user's own rows.
  */
-export async function getMemberships(): Promise<{ userId: string | null; memberships: Membership[] }> {
+export async function getMemberships(): Promise<{
+  userId: string | null;
+  email: string | null;
+  memberships: Membership[];
+}> {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return { userId: null, memberships: [] };
+  if (!auth.user) return { userId: null, email: null, memberships: [] };
 
   const { data } = await supabase
     .from("memberships")
@@ -41,14 +45,14 @@ export async function getMemberships(): Promise<{ userId: string | null; members
     }))
     .sort((a, b) => RANK[a.role] - RANK[b.role]);
 
-  return { userId: auth.user.id, memberships };
+  return { userId: auth.user.id, email: auth.user.email ?? null, memberships };
 }
 
 /** Use at the top of an area layout. Redirects anyone without the role. */
-export async function requireRole(role: Role): Promise<Membership> {
-  const { userId, memberships } = await getMemberships();
+export async function requireRole(role: Role): Promise<Membership & { email: string }> {
+  const { userId, email, memberships } = await getMemberships();
   if (!userId) redirect("/login");
   const match = memberships.find((m) => m.role === role);
   if (!match) redirect(memberships[0] ? HOME[memberships[0].role] : "/no-access");
-  return match;
+  return { ...match, email: email ?? "" };
 }
