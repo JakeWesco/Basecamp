@@ -16,6 +16,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
       <div>
         <p className="text-sm font-semibold tracking-wider text-olive uppercase">Basecamp</p>
         <h1 className="mt-2 text-4xl">Sign in</h1>
+        <p className="mt-2 text-muted">Use the email your outfitter invited you with.</p>
       </div>
       <Card>
         <Suspense>

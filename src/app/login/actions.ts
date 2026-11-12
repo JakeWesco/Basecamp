@@ -18,7 +18,7 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: "That email and password don't match." };
+  if (error) return { error: "That email and password don't match. Check them and try again." };
 
   redirect(safeNext(formData.get("next")));
 }

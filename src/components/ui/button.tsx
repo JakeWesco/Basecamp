@@ -1,16 +1,18 @@
 import type { ButtonHTMLAttributes } from "react";
-import { Spinner } from "./spinner";
-import { buttonClasses, type ButtonSize, type ButtonVariant } from "./styles";
+import { buttonClasses, cx, type ButtonSize, type ButtonVariant } from "./styles";
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
-  /** Shows a spinner, blocks clicks and tells screen readers it is busy. */
+  /** Blocks clicks, tells screen readers it is busy and shows loadingLabel. */
   loading?: boolean;
-  /** Text read while loading, e.g. "Saving…". Defaults to the button's own label. */
+  /** Text shown while loading, e.g. "Saving…". Defaults to the button's own label. */
   loadingLabel?: string;
+  /** Lets /admin/design show hover, active and focus without a mouse. */
+  "data-force"?: string;
 };
 
+/** Primary (olive), cta (clay, one per page), secondary, ghost and danger; md 44px, sm 40px. */
 export function Button({
   variant = "primary",
   size = "md",
@@ -27,11 +29,13 @@ export function Button({
       type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={buttonClasses({ variant, size, className })}
+      className={buttonClasses({ variant, size, className: cx(loading && "disabled:opacity-100", className) })}
       {...rest}
     >
-      {loading && <Spinner />}
-      {loading && loadingLabel ? loadingLabel : children}
+      {/* No spinner: the label breathes while the work runs. */}
+      <span className={cx("inline-flex items-center gap-2", loading && "animate-breathe")}>
+        {loading && loadingLabel ? loadingLabel : children}
+      </span>
     </button>
   );
 }

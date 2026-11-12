@@ -1,5 +1,6 @@
 import { useId, type ReactNode, type SelectHTMLAttributes } from "react";
 import { describedBy, Field } from "./field";
+import { CaretDown } from "./icons";
 import { cx, fieldClasses } from "./styles";
 
 type Option = { value: string; label: string; disabled?: boolean };
@@ -11,6 +12,7 @@ type Props = SelectHTMLAttributes<HTMLSelectElement> & {
   error?: ReactNode;
   /** Shown first with an empty value, e.g. "Choose a region". */
   placeholder?: string;
+  "data-force"?: string;
 };
 
 export function Select({ label, options, hint, error, placeholder, id, className, ...rest }: Props) {
@@ -23,7 +25,7 @@ export function Select({ label, options, hint, error, placeholder, id, className
           id={selectId}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy(selectId, hint, error)}
-          className={cx(fieldClasses, "cursor-pointer appearance-none pr-11", className)}
+          className={cx(fieldClasses, "cursor-pointer appearance-none pr-12", className)}
           {...rest}
         >
           {placeholder !== undefined && <option value="">{placeholder}</option>}
@@ -33,18 +35,7 @@ export function Select({ label, options, hint, error, placeholder, id, className
             </option>
           ))}
         </select>
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 16 16"
-          className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-muted"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M4 6l4 4 4-4" />
-        </svg>
+        <CaretDown className="pointer-events-none absolute top-1/2 right-4 size-5 -translate-y-1/2 text-muted" />
       </div>
     </Field>
   );

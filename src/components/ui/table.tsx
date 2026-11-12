@@ -7,7 +7,7 @@ export type Column<T> = {
   cell: (row: T) => ReactNode;
   /** Right-aligned, tabular figures: prices, amounts, counts. */
   numeric?: boolean;
-  /** On phones this column becomes the card's heading. One per table. */
+  /** Below 760px this column becomes the card's heading. One per table. */
   primary?: boolean;
 };
 
@@ -15,7 +15,7 @@ type Props<T> = {
   columns: Column<T>[];
   rows: T[];
   rowKey: (row: T) => Key;
-  /** Read by screen readers; also shown above the table when visible is set. */
+  /** Read by screen readers; also shown above the table when showCaption is set. */
   caption: string;
   showCaption?: boolean;
   /** Shown instead of the table when there are no rows (e.g. an EmptyState). */
@@ -23,8 +23,8 @@ type Props<T> = {
 };
 
 /**
- * A table on tablets and up; on phones each row turns into its own card with
- * the primary column as its heading and the rest as label/value pairs.
+ * A table from 760px wide; below that each row becomes its own card, with the
+ * primary column as its heading and the rest as label and value pairs.
  */
 export function Table<T>({ columns, rows, rowKey, caption, showCaption, empty }: Props<T>) {
   if (rows.length === 0 && empty) return <>{empty}</>;
@@ -35,19 +35,14 @@ export function Table<T>({ columns, rows, rowKey, caption, showCaption, empty }:
     <div>
       <div className="hidden overflow-x-auto rounded-card border border-line bg-card md:block">
         <table className="w-full border-collapse text-left">
-          <caption className={showCaption ? "px-6 pt-5 pb-2 text-left font-medium" : "sr-only"}>
-            {caption}
-          </caption>
+          <caption className={showCaption ? "px-6 pt-6 pb-2 text-left font-medium" : "sr-only"}>{caption}</caption>
           <thead>
             <tr className="border-b border-line">
               {columns.map((c) => (
                 <th
                   key={c.key}
                   scope="col"
-                  className={cx(
-                    "px-6 py-3 text-xs font-semibold tracking-wider text-muted uppercase",
-                    c.numeric && "text-right",
-                  )}
+                  className={cx("px-6 py-3 text-xs font-semibold tracking-wider text-muted uppercase", c.numeric && "text-right")}
                 >
                   {c.header}
                 </th>
@@ -58,7 +53,7 @@ export function Table<T>({ columns, rows, rowKey, caption, showCaption, empty }:
             {rows.map((row) => (
               <tr
                 key={rowKey(row)}
-                className="border-b border-line transition-colors duration-500 ease-basecamp last:border-b-0 hover:bg-paper"
+                className="border-b border-line transition-colors duration-600 ease-basecamp last:border-b-0 is-hover:bg-paper"
               >
                 {columns.map((c) => (
                   <td key={c.key} className={cx("px-6 py-4 align-top", c.numeric && "text-right font-medium")}>
@@ -73,7 +68,7 @@ export function Table<T>({ columns, rows, rowKey, caption, showCaption, empty }:
 
       <ul aria-label={caption} className="flex flex-col gap-3 md:hidden">
         {rows.map((row) => (
-          <li key={rowKey(row)} className="rounded-card border border-line bg-card p-5">
+          <li key={rowKey(row)} className="rounded-card border border-line bg-card p-6">
             <div className="text-lg font-semibold text-ink">{primary.cell(row)}</div>
             <dl className="mt-3 flex flex-col gap-2">
               {rest.map((c) => (

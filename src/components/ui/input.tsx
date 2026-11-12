@@ -8,6 +8,7 @@ type Props = InputHTMLAttributes<HTMLInputElement> & {
   error?: ReactNode;
   /** Right-aligned tabular figures, for prices and amounts. */
   numeric?: boolean;
+  "data-force"?: string;
 };
 
 export function Input({ label, hint, error, numeric, id, className, ...rest }: Props) {

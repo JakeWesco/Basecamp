@@ -1,29 +1,46 @@
 @import "tailwindcss";
 
-/* Basecamp's own look, matching the Basecamp landing page. Outfitter branding
-   (logo, colours) is applied per outfitter on client-facing pages, never
-   hard-coded here. Components use these tokens only: no hex values in
-   src/components. */
+/* Basecamp's own look, matching the Basecamp landing page. Used in the admin
+   and agent areas. Pages a hunter sees (client area, quotes, brochures) wrap
+   themselves in <BrandScope>, which swaps olive and clay for the outfitter's
+   own colours (src/lib/brand.ts). Components use these tokens only: no hex
+   values anywhere else in src (tests/ui checks). */
 :root {
   --paper: #f4f1ea; /* page background */
-  --card: #ffffff;
-  --ink: #1e211c; /* text */
+  --card: #ffffff; /* cards, inputs */
+  --ink: #1e211c; /* main text */
   --muted: #55594e; /* secondary text */
-  --line: #ddd7c8; /* borders */
-  --olive: #4a5a3a; /* primary */
-  --olive-dark: #2f3b24;
-  --sand: #c8b98f;
-  --sand-tint: #eae3d2;
-  --clay: #b5562f; /* the one main call to action per screen */
+  --line: #ddd7c8; /* borders and dividers */
+  --olive: #4a5a3a; /* primary actions, selected states */
+  --olive-dark: #2f3b24; /* dark bands, hover on olive */
+  --sand: #c8b98f; /* soft fills, tags */
+  --sand-tint: #eae3d2; /* soft fills, icon backgrounds */
+  --clay: #b5562f; /* the one most important action on a page */
   --clay-dark: #8f4223; /* its hover */
-  --danger: #a3352b; /* destructive actions and errors (not on the landing page) */
-  --danger-dark: #7f271f;
-  --on-dark: #ffffff; /* text on olive, clay and danger */
+
+  /* Status, muted and earthy. Each text colour meets 4.5:1 on card, paper
+     and its own tint (tests/ui/contrast.test.ts). */
+  --success: #3e6b3f;
+  --success-tint: #e3ecdc;
+  --warning: #875a12;
+  --warning-tint: #f5e8cb;
+  --error: #a3352b;
+  --error-tint: #f7e3de;
+  --error-dark: #7f271f;
+
+  /* Text on a filled colour. BrandScope picks ink or white per brand colour. */
+  --on-olive: #ffffff;
+  --on-clay: #ffffff;
+  --on-error: #ffffff;
+  --on-ink: #ffffff;
 
   --ease: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @theme inline {
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
   --color-paper: var(--paper);
   --color-card: var(--card);
   --color-ink: var(--ink);
@@ -35,17 +52,28 @@
   --color-sand-tint: var(--sand-tint);
   --color-clay: var(--clay);
   --color-clay-dark: var(--clay-dark);
-  --color-danger: var(--danger);
-  --color-danger-dark: var(--danger-dark);
-  --color-on-dark: var(--on-dark);
+  --color-success: var(--success);
+  --color-success-tint: var(--success-tint);
+  --color-warning: var(--warning);
+  --color-warning-tint: var(--warning-tint);
+  --color-error: var(--error);
+  --color-error-tint: var(--error-tint);
+  --color-error-dark: var(--error-dark);
+  --color-on-olive: var(--on-olive);
+  --color-on-clay: var(--on-clay);
+  --color-on-error: var(--on-error);
+  --color-on-ink: var(--on-ink);
 
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-display: fraunces, Georgia, serif;
 
-  /* Cards 24px; things inside a card follow outer radius minus its padding
-     (24px card, 8px inset -> 16px; 12px inset -> 12px). Buttons and pills
-     are fully rounded. */
+  /* Tables turn into cards below 760px. */
+  --breakpoint-md: 760px;
+
+  /* Cards 24px. Inside a card, radius = outer radius minus the padding
+     between them (24 card, 8 inset -> 16; 12 inset -> 12). Buttons, pills
+     and segmented controls are fully rounded. */
   --radius-card: 24px;
   --radius-inner: 16px;
   --radius-field: 12px;
@@ -53,6 +81,38 @@
   --ease-basecamp: var(--ease);
   --default-transition-duration: 600ms;
   --default-transition-timing-function: var(--ease);
+
+  /* Skeletons breathe instead of spinning. */
+  --animate-breathe: breathe 700ms var(--ease) infinite alternate;
+  @keyframes breathe {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0.45;
+    }
+  }
+}
+
+/* Hover only on devices that really hover (no sticky hover on phones), and
+   [data-force] lets /admin/design show each state without a mouse. */
+@custom-variant is-hover {
+  @media (hover: hover) {
+    &:hover:not(:disabled, [aria-disabled="true"]) {
+      @slot;
+    }
+  }
+  &[data-force~="hover"] {
+    @slot;
+  }
+}
+@custom-variant is-active {
+  &:active:not(:disabled, [aria-disabled="true"]) {
+    @slot;
+  }
+  &[data-force~="active"] {
+    @slot;
+  }
 }
 
 /* Fraunces as on the landing page, for headings that aren't h1-h3. */
@@ -76,7 +136,8 @@
 
   h1,
   h2,
-  h3 {
+  h3,
+  h4 {
     font-family: var(--font-display);
     font-variation-settings:
       "SOFT" 100,
@@ -91,7 +152,8 @@
     text-wrap: pretty;
   }
 
-  :focus-visible {
+  :focus-visible,
+  [data-force~="focus"] {
     outline: 2px solid var(--clay);
     outline-offset: 3px;
   }
@@ -114,7 +176,8 @@
   }
   /* No movement on press or hover; colour changes still show. */
   .motion-press:active,
-  .motion-press:hover {
+  .motion-press:hover,
+  .motion-press[data-force] {
     transform: none !important;
   }
 }

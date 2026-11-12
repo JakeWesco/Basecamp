@@ -1,6 +1,17 @@
 # Changelog
 
-## 2026-11-12 · Phase 1: design system
+## 2026-11-12 · Design system (branch design-system)
+- Full design system from the brief, matching the Basecamp landing page: Fraunces headings, Geist body, colour tokens plus earthy success, warning and error colours (all text 4.5:1 or better), 24px cards, fully rounded buttons, one motion curve, reduced motion respected. Tables become cards below 760px.
+- Components in `src/components/ui/`: Button (primary, call to action, secondary, ghost, danger; md 44px, sm 40px), Input, Textarea, Select, Toggle, Checkbox, SegmentedControl (each with label, help text and inline error), Card, SectionHeading, Table, Badge, EmptyState, Skeleton loaders, Toast, Dialog (bottom sheet on phones), ShareToWhatsApp. Every interactive one has hover, press (0.98), focus ring, disabled, and loading where it applies. Spinners removed.
+- Icons: Phosphor only, light weight, through `src/components/ui/icons.tsx`.
+- New layout for admin and agent: sidebar on desktop, top bar and bottom tab bar on phones. Only Dashboard is live; the other sections show as coming soon.
+- Outfitter brand layer: `src/lib/brand.tsx` reads brand_primary, brand_accent and logo_url and applies them to the client area, falling back to olive and clay. Colours must be #RRGGBB and logos https.
+- `/admin/design` (admins only) replaces `/design` and shows every token and component in all its states, with live contrast ratios and a brand colour preview.
+- Login, no-access, home and the three area pages restyled. Tests now also check spacing, type sizes, contrast, copy and the brand helper.
+- Screenshots in `docs/screenshots/design-system/`.
+- Next: review and merge this branch, then the price list.
+
+## 2026-11-12 · Phase 1: first design system pass (built on by the entry above)
 - Look matches the Basecamp landing page. Fraunces (SOFT 100, WONK 0, weight 500, never italic) for headings, Geist for body and numbers, tabular figures in tables and prices. Both load from local files through next/font, so the build needs no network.
 - Colour tokens in `src/app/globals.css` (paper, card, ink, muted, line, olive, olive-dark, sand, sand-tint, clay, clay-dark, plus danger for destructive actions). Flat backgrounds. Every transition uses cubic-bezier(0.32,0.72,0,1) at 500-700ms; reduced motion turns movement off.
 - Components in `src/components/ui/`: Button (cta, primary, secondary, ghost, danger; loading and disabled), Input, Select, Toggle, Card, Table (cards on phones), Badge (Enquiry to Completed), EmptyState, Toast, ShareToWhatsApp. All on show at `/design` (dev only).

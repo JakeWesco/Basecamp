@@ -29,7 +29,16 @@ Read it before starting a phase. If this file and the doc disagree, the doc wins
 - Auth: `src/proxy.ts` refreshes the session and guards `/app`, `/admin`, `/agent`, `/client`. Role checks use `requireRole()` in `src/lib/auth.ts`.
 - This is Next.js 16 with Cache Components: read `node_modules/next/dist/docs/` before using an API, wrap request-time data (cookies, search params) in `<Suspense>`, and note `middleware` is now `proxy`.
 - Setup for a fresh environment: `docs/SETUP.md`.
-- UI: build screens from `src/components/ui/` (see them all at `/design` in dev). Colours only from the tokens in `src/app/globals.css`, never hex or Tailwind palette classes; `tests/ui/` fails if a component hard-codes one. Clay (`variant="cta"`) is for the one main call to action on a screen; olive is the normal primary. Headings are Fraunces (h1-h3 automatically, `font-heading` elsewhere).
+
+## Design system
+
+- **Tokens** (colours, radii, motion, breakpoint) live in `src/app/globals.css`. Use them through Tailwind (`bg-olive`, `text-muted`, `rounded-card`). Never write a hex value, rgb() or a Tailwind palette class anywhere else.
+- **Components** live in `src/components/ui/` (import from `@/components/ui`). Icons come only from `@/components/ui/icons` (Phosphor, light weight). Every new screen is built from these. If something is missing, add it there with all its states and show it on `/admin/design` (admins only), which shows every token and component.
+- **Layout:** admin and agent pages sit inside `src/components/area-shell.tsx` (sidebar on desktop, top bar and bottom tab bar on phones). Nav items live in `src/components/area-nav.tsx`.
+- **Two brand layers:** Basecamp's look is for the admin and agent areas only. Anything a hunter sees (client area, quotes, brochures) is wrapped in `<BrandScope>` from `src/lib/brand.tsx`, which swaps olive and clay for the outfitter's `brand_primary` and `brand_accent`.
+- **Rules:** clay (`variant="cta"`) only for the one most important action on a page. Spacing only 4, 8, 12, 16, 24, 32, 40, 48, 64, 80, 96 px. Font sizes text-xs to text-6xl. All text at least 4.5:1 contrast. Motion only cubic-bezier(0.32,0.72,0,1) at 500 to 700ms. Skeletons, never spinners.
+- **Copy:** sentence case, short sentences, no hyphens or dashes, no exclamation marks, no "seamless", "elevate" or "unlock". Errors say what happened and what to do.
+- `tests/ui/` enforces the colour, spacing, type, motion, contrast and copy rules.
 
 ## How we build
 
