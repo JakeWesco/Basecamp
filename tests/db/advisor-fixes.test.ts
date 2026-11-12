@@ -55,6 +55,7 @@ describe("functions exposed through the API", () => {
       { name: "lead_rules", anon: false, authd: false },
       { name: "quote_lead_rules", anon: false, authd: false },
       { name: "quote_line_rules", anon: false, authd: false },
+      { name: "quote_lock_rules", anon: false, authd: false },
       { name: "quote_rules", anon: false, authd: false },
     ]);
   });

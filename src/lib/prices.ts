@@ -35,7 +35,13 @@ export type SpeciesFee = {
 /** "US$ 3,600" or "US$ 3,600.50": cents only when there are cents. */
 export function formatMoney(amount: number, currency: string): string {
   const whole = Number.isInteger(amount);
+  // Southern African currencies the way people there write them: R 1,250 and N$ 1,250.
+  const local: Record<string, string> = { ZAR: "R", NAD: "N$", BWP: "P" };
   try {
+    if (local[currency]) {
+      const n = new Intl.NumberFormat("en-US", { minimumFractionDigits: whole ? 0 : 2, maximumFractionDigits: 2 }).format(Math.abs(amount));
+      return `${amount < 0 ? "-" : ""}${local[currency]}${n}`;
+    }
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency,

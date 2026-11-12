@@ -40,6 +40,7 @@ export type Quote = {
   updated_at: string;
   share_token: string | null;
   shared_at: string | null;
+  locked_at: string | null;
 };
 
 const cents = (n: number) => Math.round(n * 100) / 100;

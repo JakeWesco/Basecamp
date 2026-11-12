@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { siteOrigin } from "@/lib/site";
+import { ratesOn } from "@/lib/fx";
+import { rateDay } from "@/lib/quote-lock";
+import type { Rates } from "@/lib/currency";
 import type { Rate, SpeciesFee } from "@/lib/prices";
 import { quoteTotals, type Quote, type QuoteLine } from "@/lib/quotes";
 
@@ -76,6 +79,8 @@ export type QuoteContext = {
   /** The hunter link, when one is on. */
   shareUrl: string | null;
   outfitterName: string;
+  /** Exchange rates for the lock day (or today), for a rough guide in other currencies. */
+  fxRates: Rates | null;
 };
 
 /** One quote with its lines and the price list it is built from. */
@@ -125,5 +130,6 @@ export async function loadQuote(area: Area, id: string): Promise<QuoteContext> {
     maxDiscount: Number(outfitter?.agent_max_discount_percent ?? 0),
     shareUrl: quote.share_token ? `${await siteOrigin()}/q/${quote.share_token}` : null,
     outfitterName: (outfitter?.name as string) ?? "",
+    fxRates: await ratesOn(quote.currency as string, rateDay(quote.locked_at as string | null)),
   };
 }

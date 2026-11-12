@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-12 · Phase 1: quote lock and currency (branch phase-1-quote-lock)
+- A quote's prices are held for 14 days from when it goes to the hunter (marked as sent, or its share link is created, whichever is first). `quotes.locked_at` is set by the database only: it can't be backdated, moved or cleared (migration `20261112210000_quote_lock.sql`, applied live). Line prices were already copied onto the quote, so price list changes never touch a quote.
+- Hunter page: "Prices held until 26 November 2026", or, once expired, "These prices were held until ... Ask Wesco Safaris for an updated quote." A switch shows the quote in USD, EUR, GBP or ZAR: a guide at the European Central Bank rate of the lock day ("You pay in US dollars"). Unit prices keep cents in other currencies so they add up.
+- Quote builder: a Prices card (not held yet, held until with days left, or expired) and "Update to today's prices", which takes the current price list, keeps quantities and freebies, and holds the prices again from today. The total also shows a rough amount in the other currencies.
+- Exchange rates come from Frankfurter (api.frankfurter.dev, ECB data, free, no key); only currency codes and a date are sent. Past days are cached for good, today's for hours. If it can't be reached, quotes show in their own currency only.
+- Money: rand shows as R130,377 and Namibian dollars as N$, as people there write them.
+- Tests: 6 for the lock in the database, 7 for lock dates and currency. 192 tests pass. Checked end to end with a test quote (deleted afterwards). The expired note is covered by tests, not seen live, since that needs a 14 day old quote.
+- Next: all-in cost, AI hunt planner, brochure.
+
 ## 2026-11-12 · Phase 1: lead inbox (branch phase-1-leads)
 - New tables `leads` and `lead_species`, and `quotes.lead_id` (migration `20261112200000_leads.sql`, applied live; advisors report nothing new). A lead needs a name and an email or a phone; phones are stored in international format. Optional: country, how they found us, species from the price list, rough dates, budget band, hunters, observers, notes. Temperature (hot, warm, cold), status (new, contacted, quoted, booked, lost, with a reason when lost), and marketing consent (off by default, records when given).
 - Roles in the database and tested: admins see every lead of their outfitter, agents only the leads they created, clients none, and no outfitter sees another's. Who created a lead is set by the database and can't be faked. A quote can only be linked to a lead its maker can see; deleting a lead keeps its quotes.
